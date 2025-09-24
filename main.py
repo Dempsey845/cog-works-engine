@@ -1,6 +1,6 @@
+from components.top_down_movement import TopDownMovement
 from engine import Engine
 from scene_manager import Scene, GameObject
-from components.transform import Transform
 from components.sprite import Sprite
 
 engine = Engine()
@@ -19,7 +19,7 @@ main_scene.add_game_object(player)
 
 shape = GameObject("Shape")
 shape.add_component(Sprite("shape.png"))
-shape.remove_component(Transform)
+shape.add_component(TopDownMovement())
 second_scene.add_game_object(shape)
 
 # Run the engine

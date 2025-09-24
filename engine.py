@@ -1,19 +1,9 @@
+# engine.py
 import pygame
 from pygame_lib.window import Window
 from scene_manager import SceneManager, Scene
-
-
-def poll_for_events(on_quit):
-    """
-    Poll for pygame events and trigger callbacks for certain events.
-
-    Args:
-        on_quit (callable): Function to call when a QUIT event is received.
-    """
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            on_quit()
-
+from input_manager import InputManager
+from event_manager import EventManager
 
 class Engine:
     """
@@ -39,6 +29,13 @@ class Engine:
         # Scene manager
         self.scene_manager = SceneManager()
 
+        # Input manager
+        self.input = InputManager.get_instance()
+
+        # Event manager
+        self.event_manager = EventManager.get_instance()
+        self.event_manager.subscribe(self.handle_event)
+
     # ---------------- Scene Management ---------------- #
 
     def add_scene(self, scene: Scene) -> None:
@@ -49,13 +46,21 @@ class Engine:
         """Set the currently active scene by name."""
         self.scene_manager.set_active_scene(scene_name)
 
+    # ---------------- Event Handling ---------------- #
+
+    def handle_event(self, event):
+        """Handle engine-specific events like QUIT."""
+        if event.type == pygame.QUIT:
+            self.quit()
+
     # ---------------- Engine Loop ---------------- #
 
     def update(self):
         """
         Handle input and update game/application state and the active scene.
         """
-        poll_for_events(self.quit)
+        self.event_manager.poll_events()  # Poll and dispatch events
+        self.input.update()         # Update input states per frame
         self.scene_manager.update(self.clock.get_time() / 1000)  # dt in seconds
 
     def render(self):

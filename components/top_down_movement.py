@@ -1,27 +1,30 @@
 from component import Component
-from components.transform import Transform
+from components.rigidbody2d import Rigidbody2D
 import pygame
 from input_manager import InputManager
+
 
 class TopDownMovement(Component):
     """
     Moves a GameObject in a top-down 2D plane using keyboard input.
+    Works with Rigidbody2D for proper physics and collisions.
     """
 
     def __init__(self, speed=200):
         super().__init__()
         self.speed = speed  # pixels per second
         self.input = InputManager.get_instance()
-        self.transform = None
+        self.rigidbody = None
 
     def start(self):
-        print(f"{self.game_object.name}: TopDownMovement initialized with speed {self.speed}")
-        self.transform = self.game_object.get_component(Transform)
+        self.rigidbody = self.game_object.get_component(Rigidbody2D)
+        if not self.rigidbody:
+            raise Exception("TopDownMovement requires a Rigidbody2D")
 
     def update(self, dt):
         dx, dy = 0, 0
 
-        # WASD controls
+        # WASD / Arrow key input
         if self.input.is_key_down(pygame.K_w) or self.input.is_key_down(pygame.K_UP):
             dy -= 1
         if self.input.is_key_down(pygame.K_s) or self.input.is_key_down(pygame.K_DOWN):
@@ -37,6 +40,6 @@ class TopDownMovement(Component):
             dx /= math.sqrt(2)
             dy /= math.sqrt(2)
 
-        # Apply movement
-        self.transform.x += dx * self.speed * dt
-        self.transform.y += dy * self.speed * dt
+        # Set velocity directly
+        self.rigidbody.velocity[0] = dx * self.speed
+        self.rigidbody.velocity[1] = dy * self.speed

@@ -55,5 +55,40 @@ class Transform(Component):
         """Return current scale as a tuple (scale_x, scale_y)."""
         return self.scale_x, self.scale_y
 
+    def debug_draw(self, surface, color=(255, 0, 0), size=10):
+        """
+        Draw a small cross at the object's position for debugging.
+
+        Args:
+            surface (pygame.Surface): The surface to draw on.
+            color (tuple): RGB color of the debug marker.
+            size (int): Half-length of the cross lines.
+        """
+        # Position
+        px, py = int(self.x), int(self.y)
+
+        # Draw horizontal line
+        pygame.draw.line(surface, color, (px - size, py), (px + size, py), 2)
+        # Draw vertical line
+        pygame.draw.line(surface, color, (px, py - size), (px, py + size), 2)
+
+    def debug_draw_rect(self, surface, width=50, height=50, color=(0, 255, 0)):
+        """
+        Draw a rectangle centred on the transform position.
+
+        Args:
+            surface (pygame.Surface): The surface to draw on.
+            width (int): Width of rectangle.
+            height (int): Height of rectangle.
+            color (tuple): RGB colour.
+        """
+        rect = pygame.Rect(0, 0, width, height)
+        rect.center = (int(self.x), int(self.y))
+        pygame.draw.rect(surface, color, rect, 2)  # 2px outline
+
+    def render(self, surface):
+        self.debug_draw(surface)
+        self.debug_draw_rect(surface)
+
     def __repr__(self):
         return f"<Transform x={self.x}, y={self.y}, rotation={self.rotation}, scale=({self.scale_x},{self.scale_y})>"

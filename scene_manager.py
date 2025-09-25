@@ -19,6 +19,7 @@ class Scene:
             game_object (GameObject): The GameObject to add.
         """
         self.game_objects.append(game_object)
+        game_object.scene = self
         game_object.start()
 
     def remove_game_object(self, game_object: GameObject) -> None:
@@ -34,6 +35,23 @@ class Scene:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
             self.game_objects.remove(game_object)
+
+    def get_components(self, component_type):
+        """
+        Get all components of a given type from all GameObjects in the scene.
+
+        Args:
+            component_type (type): The class/type of component to search for.
+
+        Returns:
+            list: A list of matching components.
+        """
+        results = []
+        for obj in self.game_objects:
+            for comp in obj.components:
+                if isinstance(comp, component_type):
+                    results.append(comp)
+        return results
 
     def update(self, dt: float) -> None:
         """

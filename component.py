@@ -11,6 +11,7 @@ class Component:
         """
         self.game_object = None  # Set when attached to a GameObject
         self.active = True
+        self.scene = None
 
     def start(self) -> None:
         """

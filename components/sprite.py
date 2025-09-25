@@ -41,8 +41,10 @@ class Sprite(Component):
         self.image = pygame.transform.scale(self.original_image, (scaled_width, scaled_height))
 
         # Apply rotation
-        self.image = pygame.transform.rotate(self.image, self.transform.rotation)
-        self.rect = self.image.get_rect(center=(self.transform.x, self.transform.y))
+        self.image = pygame.transform.rotate(self.image, -self.transform.rotation)
+
+        # Align the sprite's bottom center with the Transform position
+        self.rect = self.image.get_rect(midbottom=(self.transform.x, self.transform.y))
 
     def render(self, surface):
         """

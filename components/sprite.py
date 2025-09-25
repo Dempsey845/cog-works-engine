@@ -50,6 +50,14 @@ class Sprite(Component):
         """
         Draw the sprite on the given surface.
         """
+        camera = self.game_object.scene.camera_component
+        if camera:
+            screen_x, screen_y = camera.world_to_screen(self.transform.x, self.transform.y)
+        else:
+            screen_x, screen_y = self.transform.x, self.transform.y
+
+        # place the sprite on screen
+        self.rect = self.image.get_rect(midbottom=(screen_x, screen_y))
         surface.blit(self.image, self.rect.topleft)
 
     def change_image(self, new_image_path: str):

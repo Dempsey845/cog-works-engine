@@ -64,8 +64,12 @@ class Transform(Component):
             color (tuple): RGB color of the debug marker.
             size (int): Half-length of the cross lines.
         """
-        # Position
-        px, py = int(self.x), int(self.y)
+        # Get camera from the scene
+        camera = self.game_object.scene.camera_component
+
+        # Convert world → screen
+        px = int(self.x - camera.offset_x)
+        py = int(self.y - camera.offset_y)
 
         # Draw horizontal line
         pygame.draw.line(surface, color, (px - size, py), (px + size, py), 2)
@@ -82,8 +86,13 @@ class Transform(Component):
             height (int): Height of rectangle.
             color (tuple): RGB colour.
         """
+        camera = self.game_object.scene.camera_component
+
         rect = pygame.Rect(0, 0, width, height)
-        rect.center = (int(self.x), int(self.y))
+        rect.center = (
+            int(self.x - camera.offset_x),
+            int(self.y - camera.offset_y)
+        )
         pygame.draw.rect(surface, color, rect, 2)  # 2px outline
 
     def render(self, surface):

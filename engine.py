@@ -60,8 +60,13 @@ class Engine:
         Handle input and update game/application state and the active scene.
         """
         self.event_manager.poll_events()  # Poll and dispatch events
-        self.input.update()         # Update input states per frame
-        self.scene_manager.update(self.clock.get_time() / 1000)  # dt in seconds
+        self.input.update()  # Update input states per frame
+
+        # dt in seconds, but clamp to avoid explosions
+        dt = self.clock.get_time() / 1000.0
+        dt = min(dt, 0.05)  # max step = 50ms (~20 FPS physics)
+
+        self.scene_manager.update(dt)
 
     def render(self):
         """
@@ -69,6 +74,8 @@ class Engine:
         """
         self.window.screen.fill((30, 30, 30))  # Clear screen with dark grey
         self.scene_manager.render(self.window.screen)
+        # FPS display
+        pygame.display.set_caption(f"{self.window.caption} - FPS: {self.clock.get_fps():.2f}")
         pygame.display.flip()
 
     def quit(self):
@@ -77,10 +84,30 @@ class Engine:
 
     def run(self):
         """
-        Run the main engine loop.
-        Continuously updates and renders until quit() is called.
+        Run the main engine loop with a fixed timestep for physics.
         """
+        fixed_dt = 1 / 60.0  # 60 FPS physics step
+        accumulator = 0.0
+
         while self.running:
-            self.update()
+            # Get frame time in seconds, clamp huge spikes
+            frame_time = self.clock.tick(self.fps) / 1000.0
+            frame_time = min(frame_time, 0.25)  # cap max 250ms
+
+            accumulator += frame_time
+
+            # Poll events and update input once per frame
+            self.event_manager.poll_events()
+            self.input.update()
+
+            # Fixed timestep updates (physics / stable simulation)
+            while accumulator >= fixed_dt:
+                self.scene_manager.fixed_update(fixed_dt)
+                accumulator -= fixed_dt
+
+            # Variable timestep updates (animations, UI, effects)
+            self.scene_manager.update(frame_time)
+
+            # Render the scene
             self.render()
-            self.clock.tick(self.fps)  # Limit FPS to reduce CPU usage
+

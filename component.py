@@ -11,7 +11,6 @@ class Component:
         """
         self.game_object = None  # Set when attached to a GameObject
         self.active = True
-        self.scene = None
 
     def start(self) -> None:
         """
@@ -27,6 +26,16 @@ class Component:
 
         Args:
             dt (float): Delta time since the last frame, in seconds.
+        """
+        pass
+
+    def fixed_update(self, dt: float) -> None:
+        """
+        Called at a fixed timestep for deterministic updates,
+        such as physics or AI logic.
+
+        Args:
+            dt (float): Fixed delta time.
         """
         pass
 

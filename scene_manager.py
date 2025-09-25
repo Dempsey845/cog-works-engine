@@ -1,3 +1,4 @@
+from components.camera import Camera
 from game_object import GameObject
 
 
@@ -10,6 +11,11 @@ class Scene:
     def __init__(self, name: str = "Scene"):
         self.name = name
         self.game_objects: list[GameObject] = []
+
+        self.camera = GameObject("Camera")
+        self.camera_component = Camera()
+        self.camera.add_component(self.camera_component)
+        self.add_game_object(self.camera)
 
     def add_game_object(self, game_object: GameObject) -> None:
         """
@@ -63,6 +69,18 @@ class Scene:
         for obj in self.game_objects:
             obj.update(dt)
 
+    def fixed_update(self, dt: float) -> None:
+        """
+        Fixed timestep update for physics or deterministic logic.
+        """
+        for obj in self.game_objects:
+            if hasattr(obj, "fixed_update"):
+                obj.fixed_update(dt)
+            # Also update components if needed
+            for comp in obj.components:
+                if hasattr(comp, "fixed_update"):
+                    comp.fixed_update(dt)
+
     def render(self, surface) -> None:
         """
         Render all GameObjects in the scene.
@@ -110,6 +128,11 @@ class SceneManager:
         """Update the active scene if it exists."""
         if self.active_scene:
             self.active_scene.update(dt)
+
+    def fixed_update(self, dt: float) -> None:
+        """Call fixed_update on the active scene if it exists."""
+        if self.active_scene:
+            self.active_scene.fixed_update(dt)
 
     def render(self, surface) -> None:
         """Render the active scene if it exists."""

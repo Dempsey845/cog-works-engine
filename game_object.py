@@ -25,6 +25,9 @@ class GameObject:
         self.name = name
         self.active = True
 
+        # Scene
+        self.scene = None
+
         # Component storage
         self.components: list = []
 
@@ -84,6 +87,16 @@ class GameObject:
             return
         for comp in self.components:
             comp.update(dt)
+
+    def fixed_update(self, dt: float) -> None:
+        """
+        Fixed timestep update for physics or deterministic logic.
+        Calls fixed_update on all components that implement it.
+        """
+        if not self.active:
+            return
+        for comp in self.components:
+            comp.fixed_update(dt)
 
     def render(self, surface) -> None:
         """

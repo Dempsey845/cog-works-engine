@@ -35,6 +35,9 @@ def polygons_intersect(poly1, poly2):
                 return False
     return True
 
+def draw_line(surface,x1, y1, x2, y2, colour):
+    pygame.draw.line(surface, colour, (x1, y1), (x2, y2), 2)
+
 class Collider2D(Component):
     def __init__(self, width=0, height=0, offset_x=0, offset_y=0, debug=False):
         super().__init__()
@@ -81,17 +84,24 @@ class Collider2D(Component):
         # Rotate and translate scaled corners around the pivot
         self.points = [rotate_point(cx + x, cy + y, cx, cy, theta) for x, y in scaled_corners]
 
-    def draw_line(self, surface,x1, y1, x2, y2, colour):
-        pygame.draw.line(surface, colour, (x1, y1), (x2, y2), 2)
-
     def render(self, surface):
         if not self.debug or not self.points:
             return
+
+        camera = self.game_object.scene.camera_component
         colour = (255, 0, 0)  # Red
+
         for i in range(len(self.points)):
             x1, y1 = self.points[i]
             x2, y2 = self.points[(i + 1) % len(self.points)]
-            self.draw_line(surface, x1, y1, x2, y2, colour)
+
+            # Convert world → screen using camera offset
+            x1 -= camera.offset_x
+            y1 -= camera.offset_y
+            x2 -= camera.offset_x
+            y2 -= camera.offset_y
+
+            draw_line(surface, x1, y1, x2, y2, colour)
 
     def intersects(self, other: "Collider2D") -> bool:
         if not self.points or not other.points:

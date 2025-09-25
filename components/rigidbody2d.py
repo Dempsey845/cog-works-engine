@@ -23,11 +23,27 @@ class Rigidbody2D(Component):
         self.velocity[1] += fy / self.mass
 
     def update(self, dt):
+        """
+        Non-physics per-frame logic could go here.
+        """
+        pass
+
+    def fixed_update(self, dt):
+        """
+        Physics update at a fixed timestep.
+        Handles gravity, movement, and collision resolution.
+        """
+        # Apply gravity
         self.velocity[1] += self.gravity * dt
+
+        # Move transform
         self.transform.x += self.velocity[0] * dt
         self.transform.y += self.velocity[1] * dt
+
+        # Update collider position
         self.collider.update(dt)
 
+        # Check collisions
         for other in self.game_object.scene.get_components(Collider2D):
             if other is self.collider:
                 continue
@@ -43,6 +59,6 @@ class Rigidbody2D(Component):
             self.transform.y = other_top
         elif self.velocity[1] < 0:  # rising
             self.transform.y = other.transform.y + self.collider.height
+
         self.velocity[1] = 0
         self.collider.update(0)
-

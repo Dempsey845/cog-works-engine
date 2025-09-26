@@ -44,12 +44,22 @@ class GameObject:
         """
         Attach a component to the GameObject.
         Ensures only one component of each type exists.
+        Prevents adding Rigidbody2D to a child GameObject.
         """
         component_type = type(component)
+
+        # Only allow one Transform
         if component_type is Transform and self.get_component(Transform):
             raise ValueError("GameObject already has a Transform component")
+
+        # Prevent duplicate components
         if self.get_component(component_type) is not None:
             raise ValueError(f"GameObject already has a component of type {component_type.__name__}")
+
+        # Prevent adding Rigidbody2D to child objects
+        if component_type.__name__ == "Rigidbody2D" and self.parent is not None:
+            raise ValueError("Cannot add Rigidbody2D to a child GameObject")
+
         component.game_object = self
         self.components.append(component)
 
@@ -162,14 +172,7 @@ class GameObject:
 
     # ---------------- Utilities ----------------
     def get_world_position(self):
-        """
-        Calculate absolute position from transform and parents.
-        """
-        x, y = self.transform.x, self.transform.y
-        if self.parent:
-            px, py = self.parent.get_world_position()
-            return x + px, y + py
-        return x, y
+        return self.transform.get_world_position()
 
     def __repr__(self):
         return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}'>"

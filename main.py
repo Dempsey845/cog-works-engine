@@ -27,17 +27,23 @@ player.add_component(PlatformerMovement(speed=200, jump_force=500))
 # Place player somewhere above the floor
 player_transform = player.get_component(Transform)
 player_transform.set_world_position(WINDOW_WIDTH, 0)
-player_transform.set_scale(0.5)
+player_transform.set_local_scale(0.5)
 
 main_scene.add_game_object(player)
 
-# Create a test child GameObject for player
+# Shape physics object
+shape = GameObject("Shape")
+shape.add_component(Sprite("shape.png"))
+shape.add_component(Rigidbody2D(debug=True))
+shape.get_component(Transform).set_world_position(WINDOW_WIDTH, -400)
+main_scene.add_game_object(shape)
+
+# Test child object for player
 child = GameObject("Child")
 child.add_component(Sprite("shape.png"))
-child.add_component(Rigidbody2D(debug=True))
-child.get_component(Transform).set_world_position(WINDOW_WIDTH, -400)
-main_scene.add_game_object(child)
-
+child.get_component(Transform).set_local_position(0, -100)
+child.get_component(Transform).set_local_scale(0.2)
+player.add_child(child)
 
 # --- Camera Controller ---
 main_scene.camera.add_component(CameraController(player_transform))

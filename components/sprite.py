@@ -45,17 +45,17 @@ class Sprite(Component):
             return
 
         # Apply Transform scale
-        sx, sy = self.transform.get_scale()
+        sx, sy = self.transform.get_local_scale()
         scaled_image = pygame.transform.scale(
             self.original_image,
             (int(self.original_image.get_width() * sx), int(self.original_image.get_height() * sy))
         )
 
         # Apply Transform rotation (pygame rotates counter-clockwise)
-        self.image = pygame.transform.rotate(scaled_image, -self.transform.rotation)
+        self.image = pygame.transform.rotate(scaled_image, -self.transform.local_rotation)
 
         # Update rect to match transformed image and center at Transform position
-        self.rect = self.image.get_rect(center=(self.transform.x, self.transform.y))
+        self.rect = self.image.get_rect(center=(self.transform.local_x, self.transform.local_y))
 
     def render(self, surface):
         """

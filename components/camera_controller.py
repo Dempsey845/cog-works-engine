@@ -37,8 +37,8 @@ class CameraController(Component):
 
         # Center camera on target
         self.camera_component.center_on(
-            self.target_transform.x,
-            self.target_transform.y,
+            self.target_transform.local_x,
+            self.target_transform.local_y,
             self.window_width,
             self.window_height
         )

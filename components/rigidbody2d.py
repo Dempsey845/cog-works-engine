@@ -34,8 +34,8 @@ class Rigidbody2D(Component):
         self.transform = self.game_object.get_component(Transform)
 
         # Compute scaled width and height based on Transform scale
-        scaled_width = max(self.width * self.transform.scale_x, 1)
-        scaled_height = max(self.height * self.transform.scale_y, 1)
+        scaled_width = max(self.width * self.transform.local_scale_x, 1)
+        scaled_height = max(self.height * self.transform.local_scale_y, 1)
 
         # Create static or dynamic body
         if self.static:
@@ -46,7 +46,7 @@ class Rigidbody2D(Component):
 
         # Set initial position and rotation from Transform
         self.body.position = self.transform.get_world_position()
-        self.body.angle = math.radians(self.transform.rotation)
+        self.body.angle = math.radians(self.transform.local_rotation)
         self.transform._rb_body = self.body
 
         # Create box collider shape
@@ -75,7 +75,7 @@ class Rigidbody2D(Component):
         """
         if self.body:
             self.transform.set_world_position(*self.body.position)
-            self.transform.set_rotation(math.degrees(self.body.angle))
+            self.transform.set_local_rotation(math.degrees(self.body.angle))
 
     def render(self, surface):
         if not self.debug:

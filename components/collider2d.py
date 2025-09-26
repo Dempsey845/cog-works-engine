@@ -74,9 +74,10 @@ class Collider2D(Component):
     def update(self, dt):
         theta = math.radians(self.transform.rotation)
 
-        # Pivot at bottom-centre of the object
-        cx = self.transform.x + self.offset_x
-        cy = self.transform.y + self.offset_y
+        # Get world position including parents
+        cx, cy = self.transform.get_world_position()
+        cx += self.offset_x
+        cy += self.offset_y
 
         # Apply transform scale to local corners
         scaled_corners = [(x * self.transform.scale_x, y * self.transform.scale_y) for x, y in self.local_corners]

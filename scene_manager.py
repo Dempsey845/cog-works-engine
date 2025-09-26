@@ -31,6 +31,8 @@ class Scene:
         Start the scene by adding the default camera GameObject.
         """
         self.add_game_object(self.camera)
+        for go in self.game_objects:
+            go.start()
 
     def add_game_object(self, game_object: GameObject) -> None:
         """
@@ -41,7 +43,6 @@ class Scene:
         """
         self.game_objects.append(game_object)
         game_object.scene = self
-        game_object.start()
 
     def remove_game_object(self, game_object: GameObject) -> None:
         """

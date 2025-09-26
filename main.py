@@ -9,8 +9,8 @@ from components.platformer_movement import PlatformerMovement
 from components.camera_controller import CameraController
 
 # --- Window size ---
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 800
 
 # --- Setup engine and scene ---
 engine = Engine(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
@@ -32,6 +32,15 @@ player_transform.set_position(WINDOW_WIDTH, 0)
 player_transform.set_scale(0.5)
 
 main_scene.add_game_object(player)
+
+# Create a test child GameObject for player
+child = GameObject("Child")
+child.add_component(Sprite("shape.png"))
+child.add_component(Collider2D(debug=True))
+child.add_component(Rigidbody2D(gravity=1000.0))
+child.get_component(Transform).set_position(WINDOW_WIDTH, -400)
+main_scene.add_game_object(child)
+
 
 # --- Camera Controller ---
 main_scene.camera.add_component(CameraController(player_transform))

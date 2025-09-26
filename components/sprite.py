@@ -25,16 +25,15 @@ class Sprite(Component):
         """
         Ensure the GameObject has a Transform component.
         """
+        print("Sprite started", self.game_object.name)
         self.transform = self.game_object.get_component(Transform)
-        if self.transform is None:
-            # If no Transform exists, create one
-            self.transform = Transform()
-            self.game_object.add_component(self.transform)
 
     def update(self, dt: float):
         """
         Update the sprite's rect and apply rotation/scale.
         """
+        if not self.transform:
+            return  # wait until start() sets transform
         # Apply scaling
         scaled_width = int(self.original_image.get_width() * self.transform.scale_x)
         scaled_height = int(self.original_image.get_height() * self.transform.scale_y)
@@ -50,21 +49,20 @@ class Sprite(Component):
         """
         Draw the sprite on the given surface, taking camera offset and zoom into account.
         """
+        if not self.transform:
+            return
         camera = self.game_object.scene.camera_component
+        world_x, world_y = self.transform.get_world_position()
         if camera:
-            screen_x, screen_y = camera.world_to_screen(self.transform.x, self.transform.y)
+            screen_x, screen_y = camera.world_to_screen(world_x, world_y)
             zoom = camera.zoom
             new_width = int(self.image.get_width() * zoom)
             new_height = int(self.image.get_height() * zoom)
             scaled_image = pygame.transform.scale(self.image, (new_width, new_height))
         else:
-            screen_x, screen_y = self.transform.x, self.transform.y
+            screen_x, screen_y = world_x, world_y
             scaled_image = self.image
 
-        self.rect = scaled_image.get_rect(midbottom=(screen_x, screen_y))
-        surface.blit(scaled_image, self.rect.topleft)
-
-        # place the sprite on screen
         self.rect = scaled_image.get_rect(midbottom=(screen_x, screen_y))
         surface.blit(scaled_image, self.rect.topleft)
 

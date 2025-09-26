@@ -4,7 +4,7 @@ class Window:
     Provides convenient methods for creating and resizing the window.
     """
 
-    def __init__(self, pygame, width: int, height: int, caption: str, resizable: bool = False, fullscreen: bool = False):
+    def __init__(self, pygame, width: int, height: int, caption: str, resizable: bool = False, fullscreen: bool = False, background_color: tuple = (30, 30, 30)):
         """
         Initialise a window with the given dimensions and caption.
 
@@ -15,6 +15,7 @@ class Window:
             caption (str): The caption/title of the window.
             resizable (bool, optional): If True, allows the window to be resizable. Defaults to False.
             fullscreen (bool, optional): If True, starts the window in fullscreen mode. Defaults to False.
+            background_color (tuple, optional): Background color of the window. Defaults to (30, 30, 30).
         """
         self.pygame = pygame
         self.width = width
@@ -22,6 +23,7 @@ class Window:
         self.caption = caption
         self.resizable = resizable
         self.fullscreen = fullscreen
+        self.background_color = background_color
 
         pygame.init()
         self.screen = self._create_window()
@@ -37,7 +39,7 @@ class Window:
         self.pygame.display.set_caption(self.caption)
         return self.pygame.display.set_mode((self.width, self.height), flags)
 
-    def configure(self, width: int = None, height: int = None, resizable: bool = None, fullscreen: bool = None):
+    def configure(self, width: int = None, height: int = None, resizable: bool = None, fullscreen: bool = None, background_color: tuple = None):
         """
         Reconfigure the window size or settings.
 
@@ -46,6 +48,7 @@ class Window:
             height (int, optional): New height of the window. If None, keeps current height.
             resizable (bool, optional): Update whether the window should be resizable.
             fullscreen (bool, optional): Update whether the window should be fullscreen.
+            background_color (tuple, optional): Background color of the window.
         """
         if width:
             self.width = width
@@ -55,6 +58,8 @@ class Window:
             self.resizable = resizable
         if fullscreen is not None:
             self.fullscreen = fullscreen
+        if background_color is not None:
+            self.background_color = background_color
 
         self.screen = self._create_window()
 
@@ -81,3 +86,6 @@ class Window:
             tuple: (width, height)
         """
         return self.screen.get_size()
+
+    def render(self):
+        self.screen.fill(self.background_color)

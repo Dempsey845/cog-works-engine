@@ -55,27 +55,18 @@ class Engine:
 
     # ---------------- Engine Loop ---------------- #
 
-    def update(self):
-        """
-        Handle input and update game/application state and the active scene.
-        """
-        self.event_manager.poll_events()  # Poll and dispatch events
-        self.input.update()  # Update input states per frame
-
-        # dt in seconds, but clamp to avoid explosions
-        dt = self.clock.get_time() / 1000.0
-        dt = min(dt, 0.05)  # max step = 50ms (~20 FPS physics)
-
-        self.scene_manager.update(dt)
-
     def render(self):
         """
         Render/draw content to the screen and the active scene.
         """
-        self.window.screen.fill((30, 30, 30))  # Clear screen with dark grey
+        self.window.render()
+
         self.scene_manager.render(self.window.screen)
-        # FPS display
-        pygame.display.set_caption(f"{self.window.caption} - FPS: {self.clock.get_fps():.2f}")
+
+        # FPS display, throttled to once per second
+        if pygame.time.get_ticks() % 1000 < 16:
+            pygame.display.set_caption(f"{self.window.caption} - FPS: {self.clock.get_fps():.2f}")
+
         pygame.display.flip()
 
     def quit(self):
@@ -101,9 +92,12 @@ class Engine:
             self.input.update()
 
             # Fixed timestep updates (physics / stable simulation)
-            while accumulator >= fixed_dt:
+            max_updates = 5
+            updates = 0
+            while accumulator >= fixed_dt and updates < max_updates:
                 self.scene_manager.fixed_update(fixed_dt)
                 accumulator -= fixed_dt
+                updates += 1
 
             # Variable timestep updates (animations, UI, effects)
             self.scene_manager.update(frame_time)

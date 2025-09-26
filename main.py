@@ -34,7 +34,7 @@ main_scene.add_game_object(player)
 # Shape physics object
 shape = GameObject("Shape")
 shape.add_component(Sprite("shape.png"))
-shape.add_component(Rigidbody2D(debug=True))
+shape.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
 shape.get_component(Transform).set_world_position(WINDOW_WIDTH, -400)
 main_scene.add_game_object(shape)
 

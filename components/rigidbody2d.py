@@ -4,7 +4,7 @@ from component import Component
 from components.transform import Transform
 
 class Rigidbody2D(Component):
-    def __init__(self, width=0, height=0, mass=1.0, static=False, debug=False):
+    def __init__(self, width=0, height=0, mass=1.0, static=False, debug=False, freeze_rotation=False):
         """
         Initialize a 2D rigidbody component.
 
@@ -14,6 +14,7 @@ class Rigidbody2D(Component):
             mass (float): Mass of the body (ignored if static).
             static (bool): Whether the body is static (immovable).
             debug (bool): Whether to render debug collider.
+            freeze_rotation (bool): If True, prevents rotation of the body.
         """
         super().__init__()
         self.width = width
@@ -21,16 +22,12 @@ class Rigidbody2D(Component):
         self.mass = mass
         self.static = static
         self.debug = debug
+        self.freeze_rotation = freeze_rotation
         self.transform: Transform = None
         self.body: pymunk.Body = None
         self.shape: pymunk.Poly = None
 
     def start(self):
-        """
-        Called when the component is first added to the GameObject.
-        Creates the physics body and collider, applies Transform position,
-        rotation, and scale, and adds it to the physics space.
-        """
         self.transform = self.game_object.get_component(Transform)
 
         # Compute scaled width and height based on Transform scale
@@ -41,7 +38,10 @@ class Rigidbody2D(Component):
         if self.static:
             self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         else:
-            moment = pymunk.moment_for_box(self.mass, (scaled_width, scaled_height))
+            if self.freeze_rotation:
+                moment = math.inf
+            else:
+                moment = pymunk.moment_for_box(self.mass, (scaled_width, scaled_height))
             self.body = pymunk.Body(self.mass, moment)
 
         # Set initial position and rotation from Transform
@@ -56,6 +56,7 @@ class Rigidbody2D(Component):
 
         # Add body and shape to the scene's physics space
         self.game_object.scene.physics_space.add(self.body, self.shape)
+
 
     def apply_force(self, fx, fy):
         """

@@ -38,11 +38,19 @@ class Rigidbody2D(Component):
         if self.static:
             self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         else:
+            # Extra protection for freeze_rotation
             if self.freeze_rotation:
-                moment = math.inf
+                # Prevent invalid moments by ensuring mass is positive
+                safe_mass = max(self.mass, 0.0001)
+                moment = float('inf') if safe_mass > 0 else 0
             else:
-                moment = pymunk.moment_for_box(self.mass, (scaled_width, scaled_height))
-            self.body = pymunk.Body(self.mass, moment)
+                # Ensure width/height are valid for moment calculation
+                scaled_width = max(scaled_width, 0.1)
+                scaled_height = max(scaled_height, 0.1)
+                safe_mass = max(self.mass, 0.0001)
+                moment = pymunk.moment_for_box(safe_mass, (scaled_width, scaled_height))
+
+            self.body = pymunk.Body(safe_mass, moment)
 
         # Set initial position and rotation from Transform
         self.body.position = self.transform.get_world_position()

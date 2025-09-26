@@ -40,13 +40,11 @@ class PlatformerMovement(Component):
         body.velocity = vx, body.velocity.y
 
         # Jumping
-        if (self.input.is_key_down(pygame.K_SPACE) or
-            self.input.is_key_down(pygame.K_w) or
-            self.input.is_key_down(pygame.K_UP)):
+        if self.input.is_key_down(pygame.K_SPACE):
 
             if self.is_grounded():
-                # Apply an instantaneous upward impulse
-                body.apply_impulse_at_local_point((0, -self.jump_force * body.mass))
+                # Apply an instantaneous upward impulse in world space
+                body.apply_impulse_at_world_point((0, -self.jump_force * body.mass), body.position)
 
     def is_grounded(self):
         """

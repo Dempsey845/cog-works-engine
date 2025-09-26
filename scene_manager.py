@@ -124,9 +124,7 @@ class Scene:
         Returns:
             tuple[int, int]: Width and height of the window.
         """
-        width = self.engine.window.width
-        height = self.engine.window.height
-        return width, height
+        return self.engine.window.get_size()
 
     def __repr__(self):
         return f"<Scene name='{self.name}', objects={len(self.game_objects)}>"

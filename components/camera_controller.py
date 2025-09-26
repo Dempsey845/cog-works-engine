@@ -19,19 +19,12 @@ class CameraController(Component):
         super().__init__()
         self.target_transform = target_transform
         self.camera_component: Camera | None = None
-        self.window_height: int | None = None
-        self.window_width: int | None = None
 
     def start(self):
         self.camera_component = self.game_object.scene.camera_component
-        width, height = self.game_object.scene.get_window_size()
-        print(width, height)
-        self.window_width = width
-        self.window_height = height
 
     def update(self, dt: float) -> None:
-        if self.window_width is None or self.camera_component is None:
-            return
+        width, height = self.game_object.scene.get_window_size()
 
         zoom = self.camera_component.zoom
 
@@ -39,7 +32,7 @@ class CameraController(Component):
         self.camera_component.center_on(
             self.target_transform.local_x,
             self.target_transform.local_y,
-            self.window_width,
-            self.window_height
+            width,
+            height
         )
 

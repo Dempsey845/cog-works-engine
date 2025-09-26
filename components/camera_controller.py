@@ -30,6 +30,16 @@ class CameraController(Component):
         self.window_height = height
 
     def update(self, dt: float) -> None:
-        # Center the camera on the target
-        self.camera_component.offset_x = self.target_transform.x - self.window_width / 2
-        self.camera_component.offset_y = self.target_transform.y - self.window_height / 2
+        if self.window_width is None or self.camera_component is None:
+            return
+
+        zoom = self.camera_component.zoom
+
+        # Center camera on target
+        self.camera_component.center_on(
+            self.target_transform.x,
+            self.target_transform.y,
+            self.window_width,
+            self.window_height
+        )
+

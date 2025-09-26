@@ -9,8 +9,8 @@ from components.platformer_movement import PlatformerMovement
 from components.camera_controller import CameraController
 
 # --- Window size ---
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 
 # --- Setup engine and scene ---
 engine = Engine(width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
@@ -28,13 +28,14 @@ player.add_component(PlatformerMovement(speed=200, jump_force=500))
 
 # Place player somewhere above the floor
 player_transform = player.get_component(Transform)
-player_transform.set_position(WINDOW_WIDTH // 2, 0)
+player_transform.set_position(WINDOW_WIDTH, 0)
 player_transform.set_scale(0.5)
 
 main_scene.add_game_object(player)
 
 # --- Camera Controller ---
 main_scene.camera.add_component(CameraController(player_transform))
+main_scene.camera_component.set_zoom(0.5)
 
 # --- Floor GameObject ---
 floor = GameObject("Floor")
@@ -44,7 +45,7 @@ floor.add_component(Collider2D(debug=True))
 
 # Align floor to bottom of screen
 floor_height = floor_sprite.image.get_height()
-floor.get_component(Transform).set_position(WINDOW_WIDTH // 2, WINDOW_HEIGHT)
+floor.get_component(Transform).set_position(WINDOW_WIDTH, WINDOW_HEIGHT)
 main_scene.add_game_object(floor)
 
 # --- Run ---

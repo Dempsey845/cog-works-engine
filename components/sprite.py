@@ -48,17 +48,25 @@ class Sprite(Component):
 
     def render(self, surface):
         """
-        Draw the sprite on the given surface.
+        Draw the sprite on the given surface, taking camera offset and zoom into account.
         """
         camera = self.game_object.scene.camera_component
         if camera:
             screen_x, screen_y = camera.world_to_screen(self.transform.x, self.transform.y)
+            zoom = camera.zoom
+            new_width = int(self.image.get_width() * zoom)
+            new_height = int(self.image.get_height() * zoom)
+            scaled_image = pygame.transform.scale(self.image, (new_width, new_height))
         else:
             screen_x, screen_y = self.transform.x, self.transform.y
+            scaled_image = self.image
+
+        self.rect = scaled_image.get_rect(midbottom=(screen_x, screen_y))
+        surface.blit(scaled_image, self.rect.topleft)
 
         # place the sprite on screen
-        self.rect = self.image.get_rect(midbottom=(screen_x, screen_y))
-        surface.blit(self.image, self.rect.topleft)
+        self.rect = scaled_image.get_rect(midbottom=(screen_x, screen_y))
+        surface.blit(scaled_image, self.rect.topleft)
 
     def change_image(self, new_image_path: str):
         """

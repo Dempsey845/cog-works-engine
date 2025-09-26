@@ -91,15 +91,24 @@ class Collider2D(Component):
         camera = self.game_object.scene.camera_component
         colour = (255, 0, 0)  # Red
 
+        zoom = camera.zoom if camera else 1.0
+
         for i in range(len(self.points)):
             x1, y1 = self.points[i]
             x2, y2 = self.points[(i + 1) % len(self.points)]
 
-            # Convert world → screen using camera offset
-            x1 -= camera.offset_x
-            y1 -= camera.offset_y
-            x2 -= camera.offset_x
-            y2 -= camera.offset_y
+            if camera:
+                # Apply camera offset
+                x1 -= camera.offset_x
+                y1 -= camera.offset_y
+                x2 -= camera.offset_x
+                y2 -= camera.offset_y
+
+                # Apply zoom
+                x1 *= zoom
+                y1 *= zoom
+                x2 *= zoom
+                y2 *= zoom
 
             draw_line(surface, x1, y1, x2, y2, colour)
 

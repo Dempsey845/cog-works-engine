@@ -12,4 +12,5 @@ class Camera(Component):
         self.offset_y += dy
 
     def world_to_screen(self, x, y):
+        """Convert world coordinates to screen coordinates based on camera offset."""
         return x - self.offset_x, y - self.offset_y

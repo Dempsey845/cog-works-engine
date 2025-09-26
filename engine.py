@@ -40,7 +40,7 @@ class Engine:
 
     def add_scene(self, scene: Scene) -> None:
         """Add a scene to the scene manager."""
-        self.scene_manager.add_scene(scene)
+        self.scene_manager.add_scene(scene, self)
 
     def set_active_scene(self, scene_name: str) -> None:
         """Set the currently active scene by name."""
@@ -79,6 +79,9 @@ class Engine:
         """
         fixed_dt = 1 / 60.0  # 60 FPS physics step
         accumulator = 0.0
+
+        # Start the active scene
+        self.scene_manager.start_active_scene()
 
         while self.running:
             # Get frame time in seconds, clamp huge spikes

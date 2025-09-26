@@ -34,8 +34,6 @@ class PlatformerMovement(Component):
 
         self.rigidbody.velocity[0] = dx * self.speed
 
-        print(self.game_object.get_component(Transform).get_position())
-
         # Jumping (only if standing on something)
         if self.input.is_key_down(pygame.K_SPACE) or self.input.is_key_down(pygame.K_w) or self.input.is_key_down(pygame.K_UP):
             if self.rigidbody.velocity[1] == 0:  # grounded check via Rigidbody2D collision

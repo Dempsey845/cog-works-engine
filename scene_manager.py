@@ -1,3 +1,5 @@
+import pymunk
+
 from components.camera import Camera
 from game_object import GameObject
 
@@ -25,6 +27,9 @@ class Scene:
         self.camera = GameObject("Camera")
         self.camera_component = Camera()
         self.camera.add_component(self.camera_component)
+
+        self.physics_space = pymunk.Space()
+        self.physics_space.gravity = (0, 900)
 
     def start(self):
         """
@@ -92,6 +97,9 @@ class Scene:
         Args:
             dt (float): Fixed delta time.
         """
+
+        self.physics_space.step(dt)
+
         for obj in self.game_objects:
             if hasattr(obj, "fixed_update"):
                 obj.fixed_update(dt)

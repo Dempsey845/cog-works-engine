@@ -1,64 +1,108 @@
+import math
+import pymunk
 from component import Component
-from components.collider2d import Collider2D
 from components.transform import Transform
 
-
 class Rigidbody2D(Component):
-    def __init__(self, gravity=0.0, mass=1.0):
+    def __init__(self, width=0, height=0, mass=1.0, static=False, debug=False):
+        """
+        Initialize a 2D rigidbody component.
+
+        Args:
+            width (float): Width of the collider box.
+            height (float): Height of the collider box.
+            mass (float): Mass of the body (ignored if static).
+            static (bool): Whether the body is static (immovable).
+            debug (bool): Whether to render debug collider.
+        """
         super().__init__()
-        self.gravity = gravity
+        self.width = width
+        self.height = height
         self.mass = mass
-        self.velocity = [0.0, 0.0]
-        self.transform = None
-        self.collider = None
+        self.static = static
+        self.debug = debug
+        self.transform: Transform = None
+        self.body: pymunk.Body = None
+        self.shape: pymunk.Poly = None
 
     def start(self):
+        """
+        Called when the component is first added to the GameObject.
+        Creates the physics body and collider, applies Transform position,
+        rotation, and scale, and adds it to the physics space.
+        """
         self.transform = self.game_object.get_component(Transform)
-        self.collider = self.game_object.get_component(Collider2D)
-        if not self.transform or not self.collider:
-            raise Exception("Rigidbody2D requires Transform and Collider2D components")
+
+        # Compute scaled width and height based on Transform scale
+        scaled_width = max(self.width * self.transform.scale_x, 1)
+        scaled_height = max(self.height * self.transform.scale_y, 1)
+
+        # Create static or dynamic body
+        if self.static:
+            self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        else:
+            moment = pymunk.moment_for_box(self.mass, (scaled_width, scaled_height))
+            self.body = pymunk.Body(self.mass, moment)
+
+        # Set initial position and rotation from Transform
+        self.body.position = self.transform.get_world_position()
+        self.body.angle = math.radians(self.transform.rotation)
+        self.transform._rb_body = self.body
+
+        # Create box collider shape
+        self.shape = pymunk.Poly.create_box(self.body, (scaled_width, scaled_height))
+        self.shape.friction = 0.7
+        self.shape.elasticity = 0.0
+
+        # Add body and shape to the scene's physics space
+        self.game_object.scene.physics_space.add(self.body, self.shape)
 
     def apply_force(self, fx, fy):
-        self.velocity[0] += fx / self.mass
-        self.velocity[1] += fy / self.mass
+        """
+        Apply a force to the body at its centre of mass.
 
-    def update(self, dt):
+        Args:
+            fx (float): Force along the X axis.
+            fy (float): Force along the Y axis.
         """
-        Non-physics per-frame logic could go here.
-        """
-        pass
+        self.body.apply_force_at_world_point((fx, fy), self.body.position)
 
     def fixed_update(self, dt):
         """
-        Physics update at a fixed timestep.
-        Handles gravity, movement, and collision resolution.
+        Called every physics step.
+        Updates the Transform position and rotation based on the Rigidbody's
+        current physics state.
         """
-        # Apply gravity
-        self.velocity[1] += self.gravity * dt
+        if self.body:
+            self.transform.set_world_position(*self.body.position)
+            self.transform.set_rotation(math.degrees(self.body.angle))
 
-        # Move transform
-        self.transform.x += self.velocity[0] * dt
-        self.transform.y += self.velocity[1] * dt
+    def render(self, surface):
+        if not self.debug:
+            return
+        import pygame
+        camera = getattr(self.game_object.scene, "camera_component", None)
 
-        # Update collider position
-        self.collider.update(dt)
+        # Draw collider box
+        vertices = [v.rotated(self.body.angle) + self.body.position for v in self.shape.get_vertices()]
+        points = [camera.world_to_screen(*v) if camera else v for v in vertices]
+        for i in range(len(points)):
+            pygame.draw.line(surface, (255, 0, 0), points[i], points[(i + 1) % len(points)], 2)
 
-        # Check collisions
-        for other in self.game_object.scene.get_components(Collider2D):
-            if other is self.collider:
-                continue
-            if self.collider.intersects(other):
-                self._resolve_collision(other)
+        # Draw center of mass
+        com = camera.world_to_screen(*self.body.position) if camera else self.body.position
+        com = (int(com[0]), int(com[1]))
+        pygame.draw.circle(surface, (0, 255, 0), com, 3)
 
-    def _resolve_collision(self, other):
-        # Get colliders for convenience
-        self_bottom = self.transform.y
-        other_top = other.transform.y - other.height  # top of the other object
+        # Draw local axes
+        axis_length = 20  # pixels
+        angle = self.body.angle
+        x_axis_end = (com[0] + axis_length * math.cos(angle),
+                      com[1] + axis_length * math.sin(angle))
+        y_axis_end = (com[0] - axis_length * math.sin(angle),
+                      com[1] + axis_length * math.cos(angle))
 
-        if self.velocity[1] > 0:  # falling
-            self.transform.y = other_top
-        elif self.velocity[1] < 0:  # rising
-            self.transform.y = other.transform.y + self.collider.height
+        pygame.draw.line(surface, (0, 0, 255), com, x_axis_end, 2)  # X axis in blue
+        pygame.draw.line(surface, (255, 255, 0), com, y_axis_end, 2)  # Y axis in yellow
 
-        self.velocity[1] = 0
-        self.collider.update(0)
+

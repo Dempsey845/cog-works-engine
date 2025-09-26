@@ -2,13 +2,12 @@ from component import Component
 from components.rigidbody2d import Rigidbody2D
 import pygame
 
-from components.transform import Transform
 from input_manager import InputManager
 
 
 class PlatformerMovement(Component):
     """
-    Simple 2D platformer movement.
+    Simple 2D platformer movement using the Rigidbody2D system.
     Requires Rigidbody2D for physics and collision handling.
     """
 
@@ -25,16 +24,32 @@ class PlatformerMovement(Component):
             raise Exception("PlatformerMovement requires a Rigidbody2D")
 
     def update(self, dt):
+        if not self.rigidbody or not self.rigidbody.body:
+            return
+
+        body = self.rigidbody.body
+
         # Horizontal movement
-        dx = 0
+        vx = 0
         if self.input.is_key_down(pygame.K_a) or self.input.is_key_down(pygame.K_LEFT):
-            dx -= 1
+            vx -= self.speed
         if self.input.is_key_down(pygame.K_d) or self.input.is_key_down(pygame.K_RIGHT):
-            dx += 1
+            vx += self.speed
 
-        self.rigidbody.velocity[0] = dx * self.speed
+        # Preserve vertical velocity (gravity / jumping handled by Rigidbody2D)
+        body.velocity = vx, body.velocity.y
 
-        # Jumping (only if standing on something)
-        if self.input.is_key_down(pygame.K_SPACE) or self.input.is_key_down(pygame.K_w) or self.input.is_key_down(pygame.K_UP):
-            if self.rigidbody.velocity[1] == 0:  # grounded check via Rigidbody2D collision
-                self.rigidbody.velocity[1] = -self.jump_force
+        # Jumping
+        if (self.input.is_key_down(pygame.K_SPACE) or
+            self.input.is_key_down(pygame.K_w) or
+            self.input.is_key_down(pygame.K_UP)):
+
+            if self.is_grounded():
+                # Apply an instantaneous upward impulse
+                body.apply_impulse_at_local_point((0, -self.jump_force * body.mass))
+
+    def is_grounded(self):
+        """
+        Simple grounded check: assume body is grounded if its vertical velocity is near 0.
+        """
+        return abs(self.rigidbody.body.velocity.y) < 0.1

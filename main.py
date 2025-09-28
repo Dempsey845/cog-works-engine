@@ -1,6 +1,7 @@
 import random
 
 from components.circlebody2d import CircleBody2D
+from components.linebody2d import LineBody2D
 from engine import Engine
 from scene_manager import Scene, GameObject
 
@@ -23,23 +24,16 @@ engine.set_active_scene("Main")
 
 # --- Player GameObject ---
 player = GameObject("Player")
-player.add_component(Sprite("player.png"))
+player.add_component(Sprite("cow.png"))
 player.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
-player.add_component(PlatformerMovement(speed=800, jump_force=500))
+player.add_component(PlatformerMovement(speed=500, jump_force=1000))
 
 # Place player somewhere above the floor
 player_transform = player.get_component(Transform)
 player_transform.set_world_position(WINDOW_WIDTH, 0)
-player_transform.set_local_scale(0.5)
+player_transform.set_local_scale(2)
 
 main_scene.add_game_object(player)
-
-# Shape physics object
-shape = GameObject("Shape")
-shape.add_component(Sprite("shape.png"))
-shape.add_component(Rigidbody2D(debug=True, freeze_rotation=False))
-shape.get_component(Transform).set_world_position(WINDOW_WIDTH, -400)
-main_scene.add_game_object(shape)
 
 # Circle Container GameObject
 circle_container = GameObject("Circle Container")
@@ -48,12 +42,12 @@ main_scene.add_game_object(circle_container)
 # --- Circle GameObjects ---
 for i in range(100):
     circle = GameObject(f"Circle{i}")
-    circle.add_component(Sprite("circle.png"))
+    circle.add_component(Sprite("football.png"))
     circle.add_component(CircleBody2D(radius=50, debug=False, freeze_rotation=False))
 
     circle_transform = circle.get_component(Transform)
-    circle_transform.set_world_position(WINDOW_WIDTH + (i * 5), -300 - (i * 10))
-    circle_transform.set_local_scale(random.random() * 2 + 0.2)
+    circle_transform.set_world_position(WINDOW_WIDTH + (i * 0.1), -300 - (i * 2))
+    circle_transform.set_local_scale(random.random() * 0.5 + 0.5)
 
     circle_container.add_child(circle)
 
@@ -63,15 +57,37 @@ main_scene.camera_component.set_zoom(0.5)
 
 # --- Floor GameObject ---
 floor = GameObject("Floor")
+floor.get_component(Transform).set_local_scale(5)
+floor.get_component(Transform).set_local_rotation(15)
 floor_sprite = Sprite("floor.png")
 floor.add_component(floor_sprite)
-floor.add_component(Rigidbody2D(static=True, debug=True))
-floor.get_component(Transform).set_local_scale(20, 1)
+floor_transform = floor.get_component(Transform)
+floor.add_component(LineBody2D(static=True, debug=True, offset=(0, -250)))
 
 # Align floor to bottom of screen
 floor_height = floor_sprite.image.get_height()
 floor.get_component(Transform).set_world_position(WINDOW_WIDTH, WINDOW_HEIGHT)
 main_scene.add_game_object(floor)
+
+# -- Wall GameObject --
+wall1 = GameObject("Wall 1")
+wall1_transform = wall1.get_component(Transform)
+wall1_transform.set_local_scale(5)
+
+wall1_sprite = Sprite("Wall.png")
+wall1.add_component(wall1_sprite)
+
+wall1.add_component(Rigidbody2D(static=True, debug=True))
+
+wall_width = wall1_sprite.get_width(wall1_transform)
+wall_height = wall1_sprite.get_height(wall1_transform)
+
+floor_x, floor_y = floor_transform.get_local_position()
+left_side_of_floor = floor_x + (floor.get_component(Sprite).get_width(floor_transform) // 2)
+
+wall1_transform.set_local_position(left_side_of_floor - wall_width//2, floor_y)
+
+main_scene.add_game_object(wall1)
 
 # --- Run ---
 engine.run()

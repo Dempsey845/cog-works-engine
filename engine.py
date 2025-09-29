@@ -35,6 +35,7 @@ class Engine:
         # Event manager
         self.event_manager = EventManager.get_instance()
         self.event_manager.subscribe(self.handle_event)
+        self.window.subscribe_events(self.event_manager)
 
     # ---------------- Scene Management ---------------- #
 

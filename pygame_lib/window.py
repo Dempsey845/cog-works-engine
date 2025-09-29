@@ -4,6 +4,14 @@ class Window:
     Provides convenient methods for creating and resizing the window.
     """
 
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if not Window._instance:
+            raise Exception("Window has not been created yet!")
+        return Window._instance
+
     def __init__(self, pygame, width: int, height: int, caption: str, resizable: bool = False, fullscreen: bool = False, background_color: tuple = (30, 30, 30)):
         """
         Initialise a window with the given dimensions and caption.
@@ -17,6 +25,10 @@ class Window:
             fullscreen (bool, optional): If True, starts the window in fullscreen mode. Defaults to False.
             background_color (tuple, optional): Background color of the window. Defaults to (30, 30, 30).
         """
+        if Window._instance is not None:
+            raise Exception("Window is a singleton! Use Window.get_instance().")
+        Window._instance = self
+
         self.pygame = pygame
         self.width = width
         self.height = height
@@ -24,6 +36,7 @@ class Window:
         self.resizable = resizable
         self.fullscreen = fullscreen
         self.background_color = background_color
+        self.event_manager = None
 
         pygame.init()
         self.screen = self._create_window()
@@ -69,7 +82,7 @@ class Window:
         self.screen = self._create_window()
 
     def resize(self, width: int, height: int):
-        """
+        """"
         Resize the window to the given dimensions.
 
         Args:
@@ -88,4 +101,14 @@ class Window:
         return self.screen.get_size()
 
     def render(self):
+        """Render the window with background color."""
         self.screen.fill(self.background_color)
+
+    def handle_event(self, event):
+        """Handle pygame events."""
+        if event.type == self.pygame.VIDEORESIZE:
+            self.resize(event.w, event.h)
+
+    def subscribe_events(self, event_manager):
+        self.event_manager = event_manager
+        event_manager.subscribe(self.handle_event)

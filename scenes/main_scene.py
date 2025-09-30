@@ -16,10 +16,10 @@ def setup_main_scene(engine):
     main_scene = engine.create_scene("Main")
 
     # --- Player Setup ---
-    player = GameObject("Player")
+    player = GameObject("Player", 1)
     player.add_component(Sprite("assets/images/cow.png"))
     player.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
-    player.add_component(PlatformerMovement(speed=1000, jump_force=500))
+    player.add_component(PlatformerMovement(speed=1000, jump_force=1000))
 
     player_transform = player.get_component(Transform)
     player_transform.set_world_position(WINDOW_WIDTH, 0)
@@ -78,7 +78,7 @@ def setup_main_scene(engine):
     floor = GameObject("Floor")
     floor_transform = floor.get_component(Transform)
     floor_transform.set_local_scale(5)
-    floor_transform.set_local_rotation(0)
+    floor_transform.set_local_rotation(15)
 
     floor_sprite = Sprite("assets/images/floor.png")
     floor.add_component(floor_sprite)

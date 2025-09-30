@@ -23,7 +23,8 @@ class Label(GameObject):
                  relative=True,
                  padding=10,
                  halign="center",
-                 valign="center"):
+                 valign="center",
+                 z_index=1):
         """
         Initialize a Label object.
 
@@ -31,7 +32,7 @@ class Label(GameObject):
             text (str): The text to display in the label.
             x (float): Horizontal position of the label (0.0 to 1.0 if relative=True).
             y (float): Vertical position of the label (0.0 to 1.0 if relative=True).
-            anchor (str): Anchor point for positioning, e.g., 'center', 'top-left'.
+            anchor (str): Anchor point for positioning, e.g., 'center', 'topleft'.
             text_size (int): Font size of the text.
             bg_color (tuple or None): Background colour as (R, G, B), or None for transparent.
             border_radius (int): Corner radius of the background rectangle.
@@ -40,7 +41,7 @@ class Label(GameObject):
             halign (str): Horizontal alignment of text ('left', 'center', 'right').
             valign (str): Vertical alignment of text ('top', 'center', 'bottom').
         """
-        super().__init__()
+        super().__init__(z_index=z_index)
         self.text = text
         self.text_size = text_size
         self.bg_color = bg_color

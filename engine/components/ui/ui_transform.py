@@ -2,6 +2,18 @@ import pygame
 from engine.component import Component
 from pygame_wrappers.window import Window
 
+# Map string anchor names to rect attributes
+anchor_map = {
+    "topleft": "topleft",
+    "topright": "topright",
+    "bottomleft": "bottomleft",
+    "bottomright": "bottomright",
+    "midtop": "midtop",
+    "midbottom": "midbottom",
+    "midleft": "midleft",
+    "midright": "midright",
+    "center": "center"
+}
 
 class UITransform(Component):
     """
@@ -47,18 +59,24 @@ class UITransform(Component):
         if self.relative:
             abs_x = int(self.x * screen_w)
             abs_y = int(self.y * screen_h)
-            abs_w = int(self.width * screen_w)
-            abs_h = int(self.height * screen_h)
+            abs_w = max(1, int(self.width * screen_w))
+            abs_h = max(1, int(self.height * screen_h))
         else:
-            abs_x, abs_y, abs_w, abs_h = self.x, self.y, self.width, self.height
+            abs_x, abs_y = self.x, self.y
+            abs_w = max(1, int(self.width))
+            abs_h = max(1, int(self.height))
 
-        self.rect.size = (abs_w, abs_h)
+        # initialise rect if it doesn't exist
+        if not hasattr(self, "rect") or self.rect is None:
+            self.rect = pygame.Rect(0, 0, abs_w, abs_h)
+        else:
+            self.rect.size = (abs_w, abs_h)
 
-        # Apply the anchor
-        if hasattr(self.rect, self.anchor):
-            setattr(self.rect, self.anchor, (abs_x, abs_y))
+        if self.anchor in anchor_map:
+            setattr(self.rect, anchor_map[self.anchor], (abs_x, abs_y))
         else:
             # default fallback
+            print(f"[WARNING] Invalid anchor '{self.anchor}' provided. Falling back to 'topleft'.")
             self.rect.topleft = (abs_x, abs_y)
 
     def render(self, surface):

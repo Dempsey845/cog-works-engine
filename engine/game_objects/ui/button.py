@@ -28,7 +28,8 @@ class Button(GameObject):
                  padding=10,
                  auto_resize_text=True,
                  text_halign="center",
-                 text_valign="center"):
+                 text_valign="center",
+                 z_index=1):
         """
         Initialise a Button object.
 
@@ -50,7 +51,7 @@ class Button(GameObject):
             text_halign (str): Horizontal alignment of text ('left', 'center', 'right').
             text_valign (str): Vertical alignment of text ('top', 'center', 'bottom').
         """
-        super().__init__()
+        super().__init__(z_index=z_index)
 
         self.bg_color = bg_color
         self.hover_color = hover_color

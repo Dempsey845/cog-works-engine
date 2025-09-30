@@ -11,7 +11,7 @@ class GameObject:
 
     _id_counter = 0  # class-level counter for incremental IDs
 
-    def __init__(self, name: str = "GameObject"):
+    def __init__(self, name: str = "GameObject", z_index: int = 0):
         """
         Initialise a new GameObject with a unique identifier.
         Automatically adds a Transform component.
@@ -24,6 +24,7 @@ class GameObject:
         # Meta information
         self.name = name
         self.active = True
+        self.z_index = z_index
 
         # Scene
         self.scene = None
@@ -31,6 +32,7 @@ class GameObject:
 
         # Component storage
         self.components: list = []
+        self._sorted_components: list = []
 
         # Add default Transform component
         self.transform = Transform()
@@ -64,6 +66,8 @@ class GameObject:
         component.game_object = self
         self.components.append(component)
 
+        self._sort_components()
+
     def remove_component(self, component_type) -> bool:
         """
         Remove the first component of the given type from the GameObject.
@@ -78,6 +82,7 @@ class GameObject:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
                 self.components.pop(i)
+                self._sort_components()
                 return True
         return False
 
@@ -134,6 +139,13 @@ class GameObject:
         # Finally, reset children
         for child, child_state in zip(self.children, self.start_state["children"]):
             child.reset_to_start()
+
+    def _sort_components(self):
+        """Maintain a sorted list of components by z_index."""
+        self._sorted_components = sorted(
+            self.components,
+            key=lambda c: getattr(c, "z_index", 0)
+        )
 
     # ---------------- Hierarchy Management ----------------
     def add_child(self, child: "GameObject") -> None:
@@ -206,14 +218,13 @@ class GameObject:
             child.fixed_update(dt)
 
     def render(self, surface) -> None:
-        """
-        Render all components and children.
-        """
         if not self.active:
             return
-        for comp in self.components:
+
+        for comp in self._sorted_components:
             if hasattr(comp, "render"):
                 comp.render(surface)
+
         for child in self.children:
             child.render(surface)
 

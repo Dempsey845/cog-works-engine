@@ -8,7 +8,7 @@ class UIText(Component):
     Displays text inside a UI element.
     """
 
-    def __init__(self, text="", font_name="Arial", size=20, color=(255, 255, 255), halign="center", valign="center"):
+    def __init__(self, text="", font_name="Arial", size=20, color=(255, 255, 255), halign="center", valign="center", z_index=2):
         super().__init__()
         self.text = text
         self.font_name = font_name
@@ -19,6 +19,7 @@ class UIText(Component):
         self.rect = None
         self.halign=halign
         self.valign=valign
+        self.z_index=z_index
 
     def set_text(self, text: str):
         """Update the displayed text and re-render the surface."""

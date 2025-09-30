@@ -19,6 +19,7 @@ class Scene:
         Args:
             name (str): The name of the scene.
         """
+        self._needs_sort = False
         self.start_states = None
         self.name = name
         self.game_objects: list[GameObject] = []
@@ -50,6 +51,7 @@ class Scene:
         """
         self.game_objects.append(game_object)
         game_object.scene = self
+        self._needs_sort = True
 
     def remove_game_object(self, game_object: GameObject) -> None:
         """
@@ -63,6 +65,7 @@ class Scene:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
             self.game_objects.remove(game_object)
+            self._needs_sort = True
 
     def get_components(self, component_type):
         """
@@ -111,11 +114,17 @@ class Scene:
 
     def render(self, surface) -> None:
         """
-        Render all GameObjects in the scene to the given surface.
+        Render all GameObjects in the scene to the given surface in order of z_index.
+        GameObjects without a z_index attribute default to 0.
 
         Args:
             surface: The surface to render onto (e.g., a Pygame surface).
         """
+        # Sort game objects by z_index (default 0)
+        if self._needs_sort:
+            self.game_objects.sort(key=lambda obj: obj.z_index)
+            self._needs_sort = False
+
         for obj in self.game_objects:
             obj.render(surface)
 

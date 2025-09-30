@@ -33,6 +33,7 @@ class Sprite(Component):
             rb.width = self.original_image.get_width()
             rb.height = self.original_image.get_height()
 
+
         # Line rigidbody config
         lb: LineBody2D = self.game_object.get_component(LineBody2D)
         if lb and lb.point_a == (0, 0) and lb.point_b == (0, 0):

@@ -23,6 +23,7 @@ class Scene:
         self.start_states = None
         self.name = name
         self.game_objects: list[GameObject] = []
+        self.start_game_objects: list[GameObject] = []
 
         self.engine = None
 
@@ -34,12 +35,18 @@ class Scene:
         self.physics_space = pymunk.Space()
         self.physics_space.gravity = (0, 900)
 
+
     def start(self):
         """
         Start the scene by adding the default camera GameObject.
         """
+        self.start_game_objects = self.game_objects.copy()
+
         self.add_game_object(self.camera)
+
+        # Start each original game object
         for go in self.game_objects:
+            go.active = True
             go.start()
 
     def add_game_object(self, game_object: GameObject) -> None:

@@ -1,6 +1,8 @@
 import math
-from engine.component import Component
 
+import pygame
+
+from engine.component import Component
 
 class Transform(Component):
     """
@@ -16,14 +18,34 @@ class Transform(Component):
         local_scale_y (float): Local scale along Y axis.
     """
 
-    def __init__(self, x=0, y=0, rotation=0, scale_x=1, scale_y=1):
+    def __init__(self, x=0, y=0, rotation=0, scale_x=1, scale_y=1, debug=False, z_index=1):
+        """
+        Initialise a new Transform component.
+
+        Args:
+            x (float, optional): Initial local X position relative to parent. Defaults to 0.
+            y (float, optional): Initial local Y position relative to parent. Defaults to 0.
+            rotation (float, optional): Initial local rotation in degrees. Defaults to 0.
+            scale_x (float, optional): Initial local scale along the X axis. Defaults to 1.
+            scale_y (float, optional): Initial local scale along the Y axis. If not provided,
+                it will match scale_x. Defaults to 1.
+            debug (bool, optional): Whether to enable debug rendering for this Transform. Defaults to False.
+            z_index (int, optional): Render order index (higher values render on top). Defaults to 1.
+        """
         super().__init__()
-        # Local transform (relative to parent)
         self.local_x = x
         self.local_y = y
         self.local_rotation = rotation
         self.local_scale_x = scale_x
         self.local_scale_y = scale_y
+        self.debug = debug
+        self.z_index = z_index
+        self.world_bound_x = math.inf
+        self.world_bound_y = math.inf
+
+    def start(self):
+        self.world_bound_x = self.game_object.scene.engine.world_bound_x
+        self.world_bound_y = self.game_object.scene.engine.world_bound_y
 
     def reset_to_start(self):
         if self.game_object.uuid in self.game_object.scene.start_states:
@@ -146,6 +168,15 @@ class Transform(Component):
             self.local_scale_x = sx
             self.local_scale_y = sy if sy is not None else sx
 
+    def rotate(self, delta_degrees):
+        """
+        Increment the local rotation by delta_degrees.
+
+        Args:
+            delta_degrees (float): Amount to rotate in degrees.
+        """
+        self.local_rotation = (self.local_rotation + delta_degrees) % 360
+
     # --- World getters ---
     def get_world_position(self):
         """
@@ -183,3 +214,85 @@ class Transform(Component):
             psx, psy = self.game_object.parent.transform.get_world_scale()
             return sx * psx, sy * psy
         return sx, sy
+
+    # --- Direction getters ---
+    def get_forward(self):
+        """
+        Get the forward direction vector based on world rotation.
+
+        Returns:
+            tuple: (x, y) unit vector pointing forward.
+        """
+        angle = self.get_world_rotation(radians=True)
+        return math.cos(angle), math.sin(angle)
+
+    def get_back(self):
+        """
+        Get the backward direction vector (opposite of forward).
+
+        Returns:
+            tuple: (x, y) unit vector pointing backward.
+        """
+        fx, fy = self.get_forward()
+        return -fx, -fy
+
+    def get_right(self):
+        """
+        Get the right direction vector based on world rotation.
+
+        Returns:
+            tuple: (x, y) unit vector pointing right.
+        """
+        angle = self.get_world_rotation(radians=True)
+        # 90° clockwise from forward
+        return math.cos(angle + math.pi / 2), math.sin(angle + math.pi / 2)
+
+    def get_left(self):
+        """
+        Get the left direction vector (opposite of right).
+
+        Returns:
+            tuple: (x, y) unit vector pointing left.
+        """
+        rx, ry = self.get_right()
+        return -rx, -ry
+
+    def update(self, dt: float) -> None:
+        x, y = self.get_world_position()
+
+        out_of_bounds = (
+                x < -self.world_bound_x or x > self.world_bound_x or
+                y < -self.world_bound_y or y > self.world_bound_y
+        )
+
+        if out_of_bounds:
+            self.game_object.destroy()
+
+    # --- Rendering ---
+    def render(self, surface):
+        """
+        Render debug information if debug is enabled.
+        """
+        if not self.debug:
+            return
+
+        camera = self.game_object.scene.camera_component
+
+        # Get world transform data
+        x, y = camera.world_to_screen(*self.get_world_position())
+        fx, fy = self.get_forward()
+        rx, ry = self.get_right()
+
+        # Scale vectors for visibility in debug drawing
+        length = 30
+        forward_end = (x + fx * length, y + fy * length)
+        right_end = (x + rx * length, y + ry * length)
+
+        # Draw position point
+        pygame.draw.circle(surface, (255, 255, 0), (int(x), int(y)), 5)  # Yellow dot
+
+        # Draw forward direction
+        pygame.draw.line(surface, (0, 255, 0), (x, y), forward_end, 2)
+
+        # Draw right direction
+        pygame.draw.line(surface, (255, 0, 0), (x, y), right_end, 2)

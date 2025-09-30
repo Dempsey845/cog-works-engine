@@ -41,6 +41,7 @@ class GameObject:
         # ---------------- Hierarchy ----------------
         self.parent: "GameObject | None" = None  # Parent GameObject
         self.children: list["GameObject"] = []   # List of child GameObjects
+        self.start_children: list["GameObject"] = []
 
     # ---------------- Component Management ----------------
     def add_component(self, component) -> None:
@@ -191,8 +192,10 @@ class GameObject:
         for comp in self.components:
             comp.start()
         for child in self.children:
+            child.active = True
             child.start()
         self.save_start_state()
+        self.start_children = self.children.copy()
 
     def update(self, dt: float) -> None:
         """
@@ -228,9 +231,32 @@ class GameObject:
         for child in self.children:
             child.render(surface)
 
+    def destroy(self):
+        """Remove the GameObject from its parent or scene, or deactivate if it's a starting object."""
+
+        # Helper function to decide whether to deactivate or remove
+        def deactivate_or_remove(container, start_list, remove_func):
+            if self in start_list:
+                self.active = False
+            else:
+                remove_func(self)
+
+        if self.parent:
+            deactivate_or_remove(
+                container=self.parent,
+                start_list=self.parent.start_children,
+                remove_func=self.parent.remove_child
+            )
+        else:
+            deactivate_or_remove(
+                container=self.scene,
+                start_list=self.scene.start_game_objects,
+                remove_func=self.scene.remove_game_object
+            )
+
     # ---------------- Utilities ----------------
     def get_world_position(self):
         return self.transform.get_world_position()
 
     def __repr__(self):
-        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}'>"
+        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}' child_count={len(self.children)} active={self.active}>"

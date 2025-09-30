@@ -4,7 +4,6 @@ from engine.components.ui.ui_renderable import UIRenderable
 from engine.components.ui.ui_transform import UITransform
 from engine.game_object import GameObject
 from pygame_wrappers.event_manager import EventManager
-from pygame_wrappers.window import Window
 
 
 class UIImage(GameObject):
@@ -43,7 +42,6 @@ class UIImage(GameObject):
             width=width, height=height,
             anchor=anchor,
             relative=relative,
-            debug=True
         )
         self.add_component(self.transform)
 

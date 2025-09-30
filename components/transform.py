@@ -1,6 +1,7 @@
 import math
 from component import Component
 
+
 class Transform(Component):
     """
     Transform component to track position, rotation, and scale of a GameObject.
@@ -23,6 +24,13 @@ class Transform(Component):
         self.local_rotation = rotation
         self.local_scale_x = scale_x
         self.local_scale_y = scale_y
+
+    def reset_to_start(self):
+        if self.game_object.uuid in self.game_object.scene.start_states:
+            state = self.game_object.scene.start_states[self.game_object.uuid]
+            self.set_local_position(state["local_x"], state["local_y"])
+            self.set_local_rotation(state["local_rotation"])
+            self.set_local_scale(state["local_scale_x"], state["local_scale_y"])
 
     # --- Local setters ---
     def set_local_position(self, x, y):

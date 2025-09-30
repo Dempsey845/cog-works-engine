@@ -27,6 +27,7 @@ class GameObject:
 
         # Scene
         self.scene = None
+        self.start_state = None
 
         # Component storage
         self.components: list = []
@@ -89,6 +90,51 @@ class GameObject:
                 return comp
         return None
 
+    def has_component(self, component) -> bool:
+        """
+        Check if the GameObject has a component of the given type or class name.
+        Accepts either a class type or a string with the component's class name.
+        """
+        if isinstance(component, str):
+            # Check by class name
+            return any(c.__class__.__name__ == component for c in self.components)
+        else:
+            # Check by type
+            return self.get_component(component) is not None
+
+    def save_start_state(self):
+        # Store a deep copy of the component states
+        self.start_state = {
+            "components": [
+                {attr: getattr(c, attr) for attr in dir(c) if not attr.startswith("_")}
+                for c in self.components
+            ],
+            "children": [child.save_start_state() for child in self.children]
+        }
+        return self.start_state
+
+    def reset_to_start(self):
+        if self.start_state is None:
+            return
+
+        # First reset all Transform components
+        for comp, state in zip(self.components, self.start_state["components"]):
+            if comp.__class__.__name__ == "Transform":
+                for attr, value in state.items():
+                    setattr(comp, attr, value)
+                comp.reset_to_start()
+
+        # Then reset all other components
+        for comp, state in zip(self.components, self.start_state["components"]):
+            if comp.__class__.__name__ != "Transform":
+                for attr, value in state.items():
+                    setattr(comp, attr, value)
+                comp.reset_to_start()
+
+        # Finally, reset children
+        for child, child_state in zip(self.children, self.start_state["children"]):
+            child.reset_to_start()
+
     # ---------------- Hierarchy Management ----------------
     def add_child(self, child: "GameObject") -> None:
         """
@@ -134,6 +180,7 @@ class GameObject:
             comp.start()
         for child in self.children:
             child.start()
+        self.save_start_state()
 
     def update(self, dt: float) -> None:
         """

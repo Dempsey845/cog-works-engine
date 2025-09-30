@@ -54,3 +54,10 @@ class Component:
         Override in subclasses for cleanup logic.
         """
         pass
+
+    def reset_to_start(self):
+        """
+        Called when the scene is restarted.
+        Override in subclasses for cleanup logic.
+        """
+        pass

@@ -26,8 +26,6 @@ class CameraController(Component):
     def update(self, dt: float) -> None:
         width, height = self.game_object.scene.get_window_size()
 
-        zoom = self.camera_component.zoom
-
         # Center camera on target
         self.camera_component.center_on(
             self.target_transform.local_x,

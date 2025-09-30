@@ -1,6 +1,7 @@
 import pymunk
 
 from components.camera import Camera
+from components.transform import Transform
 from game_object import GameObject
 
 
@@ -18,6 +19,7 @@ class Scene:
         Args:
             name (str): The name of the scene.
         """
+        self.start_states = None
         self.name = name
         self.game_objects: list[GameObject] = []
 
@@ -117,6 +119,34 @@ class Scene:
         for obj in self.game_objects:
             obj.render(surface)
 
+    def restart(self):
+        # Create a new physics space
+        self.physics_space = pymunk.Space()
+        self.physics_space.gravity = (0, 900)
+
+        for go in self.game_objects:
+            go.reset_to_start()
+
+    def save_start_states(self):
+        self.start_states = {}
+
+        def save_go_state(go):
+            transform = go.get_component(Transform)
+            if transform:
+                self.start_states[go.uuid] = {
+                    "local_x": transform.local_x,
+                    "local_y": transform.local_y,
+                    "local_scale_x": transform.local_scale_x,
+                    "local_scale_y": transform.local_scale_y,
+                    "local_rotation": transform.local_rotation,
+                }
+            # Recurse through children
+            for child in getattr(go, "children", []):
+                save_go_state(child)
+
+        for go in self.game_objects:
+            save_go_state(go)
+
     def get_window_size(self) -> tuple[int, int]:
         """
         Get the current window size from the engine.
@@ -171,6 +201,9 @@ class SceneManager:
             self.active_scene = self.scenes[scene_name]
         else:
             raise ValueError(f"Scene '{scene_name}' not found in SceneManager.")
+
+    def restart_active_scene(self):
+        self.active_scene.restart()
 
     def update(self, dt: float) -> None:
         """

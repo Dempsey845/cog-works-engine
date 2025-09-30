@@ -106,3 +106,28 @@ class LineBody2D(Component):
         # Draw centre of mass
         com = camera.world_to_screen(*self.body.position) if camera else self.body.position
         pygame.draw.circle(surface, (0, 255, 0), (int(com[0]), int(com[1])), 3)
+
+    def reset_to_start(self):
+        # Recreate body
+        if self.static:
+            self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        else:
+            safe_mass = max(self.mass, 0.0001)
+            moment = pymunk.moment_for_segment(safe_mass, self.point_a, self.point_b, self.thickness)
+            self.body = pymunk.Body(safe_mass, moment)
+
+        # Reset position & rotation from transform
+        pos_x, pos_y = self.transform.get_world_position()
+        self.body.position = (pos_x + self.offset[0], pos_y + self.offset[1])
+        self.body.angle = math.radians(self.transform.local_rotation)
+
+        # Recreate segment shape
+        self.shape = pymunk.Segment(self.body, self.point_a, self.point_b, self.thickness)
+        self.shape.friction = 0.7
+        self.shape.elasticity = 0.0
+
+        # Add back to physics space
+        self.game_object.scene.physics_space.add(self.body, self.shape)
+
+        # Update cached endpoints
+        self._apply_transform()

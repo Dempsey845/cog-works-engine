@@ -21,7 +21,9 @@ class Label(GameObject):
                  bg_color=None,
                  border_radius=15,
                  relative=True,
-                 padding=10):
+                 padding=10,
+                 halign="center",
+                 valign="center"):
         """
         Initialize a Label object.
 
@@ -35,6 +37,8 @@ class Label(GameObject):
             border_radius (int): Corner radius of the background rectangle.
             relative (bool): Whether position and size are relative to window size.
             padding (int): Padding around text inside the label, in pixels.
+            halign (str): Horizontal alignment of text ('left', 'center', 'right').
+            valign (str): Vertical alignment of text ('top', 'center', 'bottom').
         """
         super().__init__()
         self.text = text
@@ -44,6 +48,8 @@ class Label(GameObject):
         self.anchor = anchor
         self.relative = relative
         self.padding = padding
+        self.halign = halign
+        self.valign = valign
 
         # Transform (positioning & sizing)
         width, height = self.calculate_size()
@@ -63,8 +69,8 @@ class Label(GameObject):
             )
             self.add_component(self.renderable)
 
-        # Text rendering
-        self.text_component = UIText(text, size=text_size)
+        # Text rendering with alignment
+        self.text_component = UIText(text, size=text_size, halign=halign, valign=valign)
         self.add_component(self.text_component)
 
         # Subscribe to window resize events

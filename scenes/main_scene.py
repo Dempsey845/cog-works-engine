@@ -40,6 +40,10 @@ def setup_main_scene(engine):
         anchor="topright",
         bg_color=(255, 0, 0),
         hover_color=(255, 50, 50),
+        min_width=100,
+        min_height=50,
+        max_width=100,
+        max_height=50
     )
     main_scene.add_game_object(exit_button)
 

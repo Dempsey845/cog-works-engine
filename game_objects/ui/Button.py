@@ -19,6 +19,7 @@ class Button(GameObject):
     def __init__(self, text, on_click,
                  width=0.25, height=0.1,
                  x=0.5, y=0.5,
+                 anchor="center",
                  bg_color=(0, 0, 255),
                  hover_color=(50, 50, 255),
                  border_radius=16,
@@ -34,6 +35,7 @@ class Button(GameObject):
             height (float): Button height (relative to screen if relative=True).
             x (float): X position (relative or absolute depending on `relative`).
             y (float): Y position (relative or absolute depending on `relative`).
+            anchor (str): The anchor for the button.
             bg_color (tuple[int, int, int]): Default background colour in RGB.
             hover_color (tuple[int, int, int]): Background colour when hovered.
             border_radius (int): Corner radius for the button background.
@@ -49,7 +51,7 @@ class Button(GameObject):
         self.add_component(UITransform(
             x=x, y=y,
             width=width, height=height,
-            anchor="center", relative=relative
+            anchor=anchor, relative=relative
         ))
 
         # Background rendering

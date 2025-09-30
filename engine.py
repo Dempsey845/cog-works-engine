@@ -58,6 +58,12 @@ class Engine:
         self.set_active_scene(scene_name)
         self.start_active_scene()
 
+    def create_scene(self, scene_name: str) -> Scene:
+        """Create a new scene and add it to scene manager."""
+        new_scene = Scene(scene_name)
+        self.add_scene(new_scene)
+        return new_scene
+
     # ---------------- Event Handling ---------------- #
 
     def handle_event(self, event):

@@ -1,19 +1,16 @@
 import random
 
-from components.circlebody2d import CircleBody2D
-from components.linebody2d import LineBody2D
-from components.ui.ui_input_handler import UIInputHandler
-from components.ui.ui_renderable import UIRenderable
-from components.ui.ui_text import UIText
-from components.ui.ui_transform import UITransform
 from engine import Engine
-from scene_manager import Scene, GameObject
+from game_object import GameObject
+from game_objects.ui.Button import Button
 
 from components.transform import Transform
 from components.sprite import Sprite
 from components.rigidbody2d import Rigidbody2D
 from components.platformer_movement import PlatformerMovement
 from components.camera_controller import CameraController
+from components.circlebody2d import CircleBody2D
+from components.linebody2d import LineBody2D
 
 # --- Window size ---
 WINDOW_WIDTH = 800
@@ -22,11 +19,9 @@ WINDOW_HEIGHT = 800
 # --- Setup engine and scene ---
 engine = Engine(width=WINDOW_WIDTH, height=WINDOW_HEIGHT, fps=180)
 
-main_scene = Scene("Main")
-menu_scene = Scene("Menu")
-engine.add_scene(main_scene)
-engine.add_scene(menu_scene)
-engine.set_active_scene("Menu")
+main_scene = engine.create_scene("Main")
+menu_scene = engine.create_scene("Menu")
+engine.set_active_scene("Main")
 
 # --- Player GameObject ---
 player = GameObject("Player")
@@ -34,20 +29,19 @@ player.add_component(Sprite("cow.png"))
 player.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
 player.add_component(PlatformerMovement(speed=500, jump_force=1000))
 
-# --- Button GameObject ---
+# --- Start Button ---
 def start_game(go):
-    print("Start button clicked!")
+    engine.change_active_scene("Main")
 
-button = GameObject("Start Button")
-# A button that’s always centered, 25% width and 10% height of screen
-button_transform = UITransform(x=0.5, y=0.5, width=0.25, height=0.1,
-                           anchor="center", relative=True, debug=True)
-button.add_component(button_transform)
-button.add_component(UIRenderable(bg_color=(0, 0, 255), border_radius=8))
-button.add_component(UIText("Play", size=24))
-button.add_component(UIInputHandler(on_click=start_game))
-menu_scene.add_game_object(button)
+start_button = Button("Start Game", start_game)
+menu_scene.add_game_object(start_button)
 
+# --- Exit Button ---
+def exit_game(go):
+    engine.change_active_scene("Menu")
+
+exit_button = Button("Exit", exit_game, x=1, y=0, anchor="topright", bg_color=(255, 0, 0), hover_color=(255, 50, 50))
+main_scene.add_game_object(exit_button)
 
 # Place player somewhere above the floor
 player_transform = player.get_component(Transform)

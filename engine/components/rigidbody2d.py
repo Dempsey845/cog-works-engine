@@ -136,7 +136,11 @@ class Rigidbody2D(Component):
             for i in range(len(points)):
                 pygame.draw.line(surface, (255, 0, 0), points[i], points[(i + 1) % len(points)], 2)
         else:  # circle
-            pygame.draw.circle(surface, (255, 0, 0), pos, int(self.shape.radius // 2), 2)
+            zoom = camera.zoom
+
+            scaled_radius = int(self.shape.radius * zoom)
+
+            pygame.draw.circle(surface, (255, 0, 0), pos, scaled_radius, 2)
 
         # Draw center of mass
         pygame.draw.circle(surface, (0, 255, 0), pos, 3)

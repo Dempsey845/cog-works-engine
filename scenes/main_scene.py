@@ -18,7 +18,7 @@ def setup_main_scene(engine):
     # --- Player Setup ---
     player = GameObject("Player", 1)
     player.add_component(Sprite("assets/images/cow.png"))
-    player.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
+    player.add_component(Rigidbody2D(freeze_rotation=True, width=80, height=100, debug=True))
     player.add_component(PlatformerMovement(speed=1000, jump_force=1000))
 
     player_transform = player.get_component(Transform)
@@ -51,17 +51,19 @@ def setup_main_scene(engine):
     test_object = GameObject("Test")
     test_object.add_component(Sprite("assets/images/shape.png"))
     test_object.add_component(TestComponent())
+    test_object.transform.set_world_rotation(90)
+    test_object.transform.debug = True
     main_scene.add_game_object(test_object)
 
     # --- Circle Container & Circles ---
     circle_container = GameObject("Circle Container")
     main_scene.add_game_object(circle_container)
 
-    for i in range(30):
+    for i in range(10):
         circle = GameObject(f"Circle{i}")
         circle.add_component(Sprite("assets/images/football.png"))
         circle.add_component(
-            Rigidbody2D(shape_type="circle", radius=50, debug=True, freeze_rotation=False)
+            Rigidbody2D(shape_type="circle", radius=50, debug=True, freeze_rotation=False, friction=0.1)
         )
 
         circle_transform = circle.get_component(Transform)
@@ -72,13 +74,13 @@ def setup_main_scene(engine):
 
     # --- Camera ---
     main_scene.camera.add_component(CameraController(player_transform))
-    main_scene.camera_component.set_zoom(.5)
+    main_scene.camera_component.set_zoom(0.4)
 
     # --- Floor ---
     floor = GameObject("Floor")
     floor_transform = floor.get_component(Transform)
     floor_transform.set_local_scale(5)
-    floor_transform.set_local_rotation(15)
+    floor_transform.set_local_rotation(0)
 
     floor_sprite = Sprite("assets/images/floor.png")
     floor.add_component(floor_sprite)

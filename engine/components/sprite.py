@@ -1,8 +1,8 @@
 import pygame
-from component import Component
-from components.linebody2d import LineBody2D
-from components.transform import Transform
-from components.rigidbody2d import Rigidbody2D
+from engine.component import Component
+from engine.components.linebody2d import LineBody2D
+from engine.components.transform import Transform
+from engine.components.rigidbody2d import Rigidbody2D
 
 class Sprite(Component):
     def __init__(self, image_path: str):

@@ -1,5 +1,5 @@
 import pygame
-from event_manager import EventManager
+from pygame_wrappers.event_manager import EventManager
 
 
 class InputManager:

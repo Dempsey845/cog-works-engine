@@ -1,7 +1,7 @@
-from component import Component
-from components.rigidbody2d import Rigidbody2D
+from engine.component import Component
+from engine.components.rigidbody2d import Rigidbody2D
 import pygame
-from input_manager import InputManager
+from pygame_wrappers.input_manager import InputManager
 
 
 class TopDownMovement(Component):

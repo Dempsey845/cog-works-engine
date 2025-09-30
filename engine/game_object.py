@@ -1,5 +1,5 @@
 import uuid
-from components.transform import Transform
+from engine.components.transform import Transform
 
 
 class GameObject:

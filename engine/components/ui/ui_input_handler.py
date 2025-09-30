@@ -1,7 +1,7 @@
 import pygame
-from component import Component
-from components.ui.ui_transform import UITransform
-from event_manager import EventManager
+from engine.component import Component
+from engine.components.ui.ui_transform import UITransform
+from pygame_wrappers.event_manager import EventManager
 
 
 class UIInputHandler(Component):

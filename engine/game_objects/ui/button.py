@@ -1,8 +1,8 @@
-from components.ui.ui_input_handler import UIInputHandler
-from components.ui.ui_renderable import UIRenderable
-from components.ui.ui_text import UIText
-from components.ui.ui_transform import UITransform
-from game_object import GameObject
+from engine.components.ui.ui_input_handler import UIInputHandler
+from engine.components.ui.ui_renderable import UIRenderable
+from engine.components.ui.ui_text import UIText
+from engine.components.ui.ui_transform import UITransform
+from engine.game_object import GameObject
 
 
 class Button(GameObject):

@@ -1,6 +1,6 @@
 import pygame
-from component import Component
-from pygame_lib.window import Window
+from engine.component import Component
+from pygame_wrappers.window import Window
 
 
 class UITransform(Component):

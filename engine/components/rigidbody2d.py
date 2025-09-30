@@ -1,8 +1,8 @@
 # rigidbody2d.py
 import math
 import pymunk
-from component import Component
-from components.transform import Transform
+from engine.component import Component
+from engine.components.transform import Transform
 
 
 class Rigidbody2D(Component):

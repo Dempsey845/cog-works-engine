@@ -1,9 +1,10 @@
 # engine.py
 import pygame
-from pygame_lib.window import Window
-from scene_manager import SceneManager, Scene
-from input_manager import InputManager
-from event_manager import EventManager
+
+from engine.scene_manager import SceneManager, Scene
+from pygame_wrappers.window import Window
+from pygame_wrappers.input_manager import InputManager
+from pygame_wrappers.event_manager import EventManager
 
 class Engine:
     """

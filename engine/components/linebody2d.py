@@ -1,7 +1,7 @@
 import math
 import pymunk
-from component import Component
-from components.transform import Transform
+from engine.component import Component
+from engine.components.transform import Transform
 
 class LineBody2D(Component):
     def __init__(self, point_a=(0, 0), point_b=(0, 0), thickness=1.0, mass=1.0, static=False, debug=False, offset=(0, 0)):

@@ -1,6 +1,6 @@
-from component import Component
-from components.camera import Camera
-from components.transform import Transform
+from engine.component import Component
+from engine.components.camera import Camera
+from engine.components.transform import Transform
 
 
 class CameraController(Component):

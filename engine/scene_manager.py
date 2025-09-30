@@ -1,8 +1,8 @@
 import pymunk
 
-from components.camera import Camera
-from components.transform import Transform
-from game_object import GameObject
+from engine.components.camera import Camera
+from engine.components.transform import Transform
+from engine.game_object import GameObject
 
 
 class Scene:

@@ -19,7 +19,7 @@ def setup_main_scene(engine):
     player = GameObject("Player")
     player.add_component(Sprite("assets/images/cow.png"))
     player.add_component(Rigidbody2D(debug=True, freeze_rotation=True))
-    player.add_component(PlatformerMovement(speed=500, jump_force=1000))
+    player.add_component(PlatformerMovement(speed=1000, jump_force=500))
 
     player_transform = player.get_component(Transform)
     player_transform.set_world_position(WINDOW_WIDTH, 0)
@@ -57,7 +57,7 @@ def setup_main_scene(engine):
     circle_container = GameObject("Circle Container")
     main_scene.add_game_object(circle_container)
 
-    for i in range(10):
+    for i in range(30):
         circle = GameObject(f"Circle{i}")
         circle.add_component(Sprite("assets/images/football.png"))
         circle.add_component(
@@ -72,13 +72,13 @@ def setup_main_scene(engine):
 
     # --- Camera ---
     main_scene.camera.add_component(CameraController(player_transform))
-    main_scene.camera_component.set_zoom(0.5)
+    main_scene.camera_component.set_zoom(.5)
 
     # --- Floor ---
     floor = GameObject("Floor")
     floor_transform = floor.get_component(Transform)
     floor_transform.set_local_scale(5)
-    floor_transform.set_local_rotation(15)
+    floor_transform.set_local_rotation(0)
 
     floor_sprite = Sprite("assets/images/floor.png")
     floor.add_component(floor_sprite)
@@ -90,7 +90,7 @@ def setup_main_scene(engine):
     # --- Wall ---
     wall1 = GameObject("Wall 1")
     wall1_transform = wall1.get_component(Transform)
-    wall1_transform.set_local_scale(5)
+    wall1_transform.set_local_scale(10)
 
     wall1_sprite = Sprite("assets/images/Wall.png")
     wall1.add_component(wall1_sprite)

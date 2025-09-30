@@ -50,7 +50,10 @@ class Window:
             flags |= self.pygame.FULLSCREEN
 
         self.pygame.display.set_caption(self.caption)
-        return self.pygame.display.set_mode((self.width, self.height), flags)
+        screen = self.pygame.display.set_mode((self.width, self.height), flags)
+        icon = self.pygame.image.load("assets/images/cog_works_icon.png")
+        self.pygame.display.set_icon(icon)
+        return screen
 
     def configure(self, width: int = None, height: int = None, resizable: bool = None, fullscreen: bool = None, background_color: tuple = None):
         """

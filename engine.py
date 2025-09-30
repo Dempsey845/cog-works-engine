@@ -47,6 +47,17 @@ class Engine:
         """Set the currently active scene by name."""
         self.scene_manager.set_active_scene(scene_name)
 
+    def start_active_scene(self):
+        """
+        Call start() on the active scene if it exists.
+        """
+        self.scene_manager.start_active_scene()
+
+    def change_active_scene(self, scene_name: str) -> None:
+        """Change the currently active scene by name."""
+        self.set_active_scene(scene_name)
+        self.start_active_scene()
+
     # ---------------- Event Handling ---------------- #
 
     def handle_event(self, event):

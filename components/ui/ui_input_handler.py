@@ -9,10 +9,11 @@ class UIInputHandler(Component):
     Handles mouse input events for a UI element (hover, click, release).
     """
 
-    def __init__(self, on_click=None, on_hover=None, on_release=None):
+    def __init__(self, on_click=None, on_hover=None, on_hover_exit=None, on_release=None):
         super().__init__()
         self.on_click = on_click
         self.on_hover = on_hover
+        self.on_hover_exit = on_hover_exit
         self.on_release = on_release
 
         self.is_hovered = False
@@ -44,6 +45,9 @@ class UIInputHandler(Component):
                 if self.on_hover:
                     self.on_hover(self.game_object)
         else:
+            if self.is_hovered:
+                if self.on_hover_exit:
+                    self.on_hover_exit(self.game_object)
             self.is_hovered = False
 
         # Click handling

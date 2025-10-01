@@ -2,6 +2,8 @@ import pygame
 from engine.component import Component
 from engine.components.sprite import Sprite
 from engine.components.transform import Transform
+from pygame_wrappers.event_manager import EventManager
+
 
 class Background(Component):
     """
@@ -17,10 +19,9 @@ class Background(Component):
     def start(self):
         self.transform = self.game_object.get_component(Transform)
         self.original_image = self.game_object.get_component(Sprite).original_image
-        self._scale_and_center()
 
-    def update(self, dt: float):
-        # TODO: change this to event based rather then on update()
+        EventManager.get_instance().subscribe(self._on_event)
+
         self._scale_and_center()
 
     def _scale_and_center(self):
@@ -48,3 +49,11 @@ class Background(Component):
     def render(self, surface):
         if self.scaled_image and self.transform:
             surface.blit(self.scaled_image, (self.transform.local_x, self.transform.local_y))
+
+    def _on_event(self, event):
+        if event.type == pygame.VIDEORESIZE:
+            self._scale_and_center()
+
+    def on_destroy(self):
+        """Unsubscribe when the component is destroyed."""
+        EventManager.get_instance().unsubscribe(self._on_event)

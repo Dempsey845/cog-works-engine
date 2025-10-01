@@ -3,6 +3,8 @@ from engine.component import Component
 from engine.components.linebody2d import LineBody2D
 from engine.components.transform import Transform
 from engine.components.rigidbody2d import Rigidbody2D
+from engine.utils.asset_loader import load_user_image
+
 
 class Sprite(Component):
     def __init__(self, image_path: str):
@@ -10,11 +12,11 @@ class Sprite(Component):
         Sprite component to render an image associated with a GameObject.
 
         Args:
-            image_path (str): Path to the image file.
+            image_path (str): Path to the image file (inside 'assets' folder).
         """
         super().__init__()
         self.image_path = image_path
-        self.original_image = pygame.image.load(image_path).convert_alpha()  # Original unscaled image
+        self.original_image = load_user_image(image_path)
         self.image = self.original_image  # Current transformed image
         self.rect = self.image.get_rect()  # Rect for positioning and collision
         self.transform: Transform = None
@@ -106,7 +108,7 @@ class Sprite(Component):
             new_image_path (str): Path to the new image file.
         """
         self.image_path = new_image_path
-        self.original_image = pygame.image.load(new_image_path).convert_alpha()
+        self.original_image = load_user_image(new_image_path)
         self._apply_transform()  # Immediately apply to match current transform
 
     def get_width(self, transform: 'Transform' = None) -> float:

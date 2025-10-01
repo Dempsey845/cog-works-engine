@@ -16,7 +16,9 @@ class UIImage(GameObject):
                  x=0.5, y=0.5,
                  width=0.2, height=0.2,
                  anchor="center",
-                 relative=True, z_index=1):
+                 relative=True,
+                 z_index=1,
+                 from_engine=False):
         """
         Initialize a UIImage object.
 
@@ -28,6 +30,7 @@ class UIImage(GameObject):
             height (float): Height (relative if relative=True, else pixels).
             anchor (str): Anchor point for positioning, e.g., 'center', 'topleft'.
             relative (bool): Whether position and size are relative to window size.
+            from_engine (bool): If True, loads from engine assets. Otherwise, loads from user assets.
         """
         super().__init__(z_index=z_index)
         self.image_path = image_path
@@ -47,7 +50,8 @@ class UIImage(GameObject):
 
         # Background or image rendering
         self.renderable = UIRenderable(
-            image_path=image_path
+            image_path=image_path,
+            from_engine=from_engine,
         )
         self.add_component(self.renderable)
 

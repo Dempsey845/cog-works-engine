@@ -1,6 +1,7 @@
 import pygame
 from engine.component import Component
 from engine.components.ui.ui_transform import UITransform
+from engine.utils.asset_loader import load_user_image, load_engine_image
 
 
 class UIRenderable(Component):
@@ -8,7 +9,15 @@ class UIRenderable(Component):
     Renders a background (solid colour or image) for a UI element.
     """
 
-    def __init__(self, bg_color=(50, 50, 50), border_radius=0, image_path=None, z_index=1):
+    def __init__(self, bg_color=(50, 50, 50), border_radius=0, image_path=None, z_index=1, from_engine=False):
+        """
+        Args:
+            bg_color (tuple): Background colour if no image is given.
+            border_radius (int): Optional rounded corners.
+            image_path (str): Relative path to image (either user asset or engine asset).
+            z_index (int): Render order.
+            from_engine (bool): If True, loads from engine assets. Otherwise, loads from user assets.
+        """
         super().__init__()
         self.bg_color = bg_color
         self.border_radius = border_radius
@@ -19,7 +28,10 @@ class UIRenderable(Component):
         self.scaled_image = None
 
         if image_path is not None:
-            self.original_image = pygame.image.load(image_path).convert_alpha()
+            if from_engine:
+                self.original_image = load_engine_image(image_path)
+            else:
+                self.original_image = load_user_image(image_path)
             self.scaled_image = self.original_image
 
     def render(self, surface):

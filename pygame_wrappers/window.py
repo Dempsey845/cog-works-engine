@@ -1,3 +1,6 @@
+from engine.utils.asset_loader import load_engine_image
+
+
 class Window:
     """
     A wrapper class around pygame's display window handling.
@@ -51,7 +54,7 @@ class Window:
 
         self.pygame.display.set_caption(self.caption)
         screen = self.pygame.display.set_mode((self.width, self.height), flags)
-        icon = self.pygame.image.load("assets/images/cog_works_icon.png")
+        icon = load_engine_image("images/cog_works_icon_2.png")
         self.pygame.display.set_icon(icon)
         return screen
 

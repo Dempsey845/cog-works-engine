@@ -8,13 +8,14 @@ class CameraController(Component):
     CameraController allows a camera to follow a target Transform with optional smoothing and offsets.
     """
 
-    def __init__(self, target_transform: Transform, offset_x: float = 0, offset_y: float = 0, smoothing: float = 5.0):
+    def __init__(self, target_transform: Transform, offset_x: float = 0, offset_y: float = 0, smoothing: float = 5.0, fixed: bool = False):
         """
         Args:
             target_transform (Transform): The Transform of the target GameObject.
             offset_x (float): Horizontal offset from the target position.
             offset_y (float): Vertical offset from the target position.
             smoothing (float): How fast the camera follows the target. Higher = snappier.
+            fixed (bool): use fixed_update(). Good for following physics objects.
         """
         super().__init__()
         self.target_transform = target_transform
@@ -22,11 +23,20 @@ class CameraController(Component):
         self.offset_y = offset_y
         self.smoothing = smoothing
         self.camera_component: Camera | None = None
+        self.fixed = fixed
 
     def start(self):
         self.camera_component = self.game_object.scene.camera_component
 
     def update(self, dt: float) -> None:
+        if not self.fixed:
+            self.control(dt)
+
+    def fixed_update(self, dt: float) -> None:
+        if self.fixed:
+            self.control(dt)
+
+    def control(self, dt):
         if not self.camera_component:
             return
 

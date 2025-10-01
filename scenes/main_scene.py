@@ -71,7 +71,7 @@ def setup_main_scene(engine):
         circle = GameObject(f"Circle{i}")
         circle.add_component(Sprite("images/football.png"))
         circle.add_component(
-            Rigidbody2D(shape_type="circle", radius=50, debug=True, freeze_rotation=False, friction=0.1)
+            Rigidbody2D(shape_type="circle", radius=50, debug=False, freeze_rotation=False, friction=0.1)
         )
 
         circle_transform = circle.get_component(Transform)
@@ -88,13 +88,14 @@ def setup_main_scene(engine):
     floor = GameObject("Floor")
     floor_transform = floor.get_component(Transform)
     floor_transform.set_local_scale(5)
-    floor_transform.set_local_rotation(0)
+    floor_transform.set_local_rotation(15)
 
     floor_sprite = Sprite("images/floor.png")
     floor.add_component(floor_sprite)
     floor.add_component(LineBody2D(static=True, debug=True, offset=(0, -250)))
 
     floor_transform.set_world_position(WINDOW_WIDTH, WINDOW_HEIGHT)
+
     main_scene.add_game_object(floor)
 
     # --- Wall ---

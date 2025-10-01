@@ -21,9 +21,12 @@ class Sprite(Component):
         self.rect = self.image.get_rect()  # Rect for positioning and collision
         self.transform: Transform = None
         self._last_transform_state = None  # Cache to detect Transform changes
+        self.camera = None
+        self._scaled_image_cache = {}  # Cache for scaled images (scale, zoom) -> pygame.Surface
 
     def start(self):
         self.transform = self.game_object.get_component(Transform)
+        self.camera = self.game_object.scene.camera_component
         if not self.transform:
             self.transform = Transform()
             self.game_object.add_component(self.transform)
@@ -34,7 +37,6 @@ class Sprite(Component):
             # Use unscaled image size for collider
             rb.width = self.original_image.get_width()
             rb.height = self.original_image.get_height()
-
 
         # Line rigidbody config
         lb: LineBody2D = self.game_object.get_component(LineBody2D)
@@ -64,6 +66,9 @@ class Sprite(Component):
         # Store the state so we don't re-transform unnecessarily
         self._last_transform_state = (sx, sy, self.transform.local_rotation)
 
+        # Clear scaled image cache since base image changed
+        self._scaled_image_cache.clear()
+
     def update(self, dt: float):
         if not self.transform:
             return
@@ -79,26 +84,40 @@ class Sprite(Component):
     def render(self, surface):
         """
         Draw the sprite onto the given surface, considering camera zoom/position if available.
-
-        Args:
-            surface (pygame.Surface): The surface to render onto.
+        Uses a cache to store previously scaled images for performance.
         """
-        if not self.transform:
+        if not self.transform or not self.image:
             return
 
-        camera = getattr(self.game_object.scene, "camera_component", None)
         x, y = self.transform.get_world_position()
         img = self.image
+        w, h = img.get_size()
 
-        if camera:
-            # Convert world position to screen coordinates
-            x, y = camera.world_to_screen(x, y)
+        # Determine current zoom
+        zoom = self.camera.zoom if self.camera else 1.0
+
+        # Check if we already cached this scale+zoom
+        cache_key = (w, h, zoom)
+        if cache_key in self._scaled_image_cache:
+            img_scaled = self._scaled_image_cache[cache_key]
+            w_scaled, h_scaled = img_scaled.get_size()
+        else:
             # Apply camera zoom
-            w, h = img.get_size()
-            img = pygame.transform.scale(img, (int(w * camera.zoom), int(h * camera.zoom)))
+            w_scaled, h_scaled = int(w * zoom), int(h * zoom)
+            img_scaled = pygame.transform.scale(img, (w_scaled, h_scaled))
+            self._scaled_image_cache[cache_key] = img_scaled
 
-        rect = img.get_rect(center=(x, y))
-        surface.blit(img, rect.topleft)
+        # Skip rendering if outside camera view
+        if self.camera and not self.camera.is_visible(x, y, w_scaled, h_scaled):
+            return
+
+        # Calculate screen position
+        if self.camera:
+            screen_x, screen_y = self.camera.world_to_screen(x, y)
+            surface.blit(img_scaled, (screen_x - w_scaled // 2, screen_y - h_scaled // 2))
+        else:
+            rect = img_scaled.get_rect(center=(x, y))
+            surface.blit(img_scaled, rect.topleft)
 
     def change_image(self, new_image_path: str):
         """

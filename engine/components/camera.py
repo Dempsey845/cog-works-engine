@@ -1,4 +1,6 @@
 from engine.component import Component
+from pygame_wrappers.event_manager import EventManager
+from pygame_wrappers.window import Window
 
 
 class Camera(Component):
@@ -7,6 +9,17 @@ class Camera(Component):
         self.offset_x = 0
         self.offset_y = 200
         self.zoom = 1.0  # 1.0 = normal, <1.0 = zoom out, >1.0 = zoom in
+        self.surface_width, self.surface_height = Window.get_instance().get_size()
+
+        # Subscribe to window resize events
+        EventManager.get_instance().subscribe(self.handle_window_event)
+
+    def handle_window_event(self, event):
+        """Update surface size on window resize."""
+        import pygame
+        if event.type == pygame.VIDEORESIZE:
+            self.surface_width = event.w
+            self.surface_height = event.h
 
     def move(self, dx, dy):
         """Move the camera by a given delta."""
@@ -41,3 +54,12 @@ class Camera(Component):
         """
         self.offset_x = x - (screen_width / 2) / self.zoom
         self.offset_y = y - (screen_height / 2) / self.zoom
+
+    def is_visible(self, x: float, y: float, width: float, height: float, tolerance: int = 10) -> bool:
+        left = (x - width / 2 - self.offset_x) * self.zoom
+        right = (x + width / 2 - self.offset_x) * self.zoom
+        top = (y - height / 2 - self.offset_y) * self.zoom
+        bottom = (y + height / 2 - self.offset_y) * self.zoom
+
+        return not (right < -tolerance or left > self.surface_width + tolerance or
+                    bottom < -tolerance or top > self.surface_height + tolerance)

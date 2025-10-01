@@ -1,4 +1,6 @@
 import random
+
+from engine.components.background import Background
 from engine.game_object import GameObject
 from engine.game_objects.ui.button import Button
 from engine.components.transform import Transform
@@ -14,6 +16,12 @@ WINDOW_HEIGHT = 800
 
 def setup_main_scene(engine):
     main_scene = engine.create_scene("Main")
+
+    # --- Background Setup ---
+    background = GameObject("Background")
+    background.add_component(Sprite("images/sky_background.png"))
+    background.add_component(Background())
+    main_scene.add_game_object(background)
 
     # --- Player Setup ---
     player = GameObject("Player", 1)

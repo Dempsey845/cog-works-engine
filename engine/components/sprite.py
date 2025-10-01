@@ -111,7 +111,7 @@ class Sprite(Component):
         if self.camera and not self.camera.is_visible(x, y, w_scaled, h_scaled):
             return
 
-        # Calculate screen position
+        # Calculate screen position and draw
         if self.camera:
             screen_x, screen_y = self.camera.world_to_screen(x, y)
             surface.blit(img_scaled, (screen_x - w_scaled // 2, screen_y - h_scaled // 2))

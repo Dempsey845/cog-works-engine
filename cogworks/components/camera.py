@@ -70,20 +70,27 @@ class Camera(Component):
         Returns:
             bool: True if the sprite is (partially) visible on camera, False if completely outside.
         """
-        # Automatically set tolerance based on size if not provided
+        top, bottom, left, right = self.get_bounds()
+
         if tolerance is None:
             max_dim = max(width, height)
-            if max_dim > 200:  # threshold for "large" objects
-                tolerance = max_dim * 0.5
-            else:
-                tolerance = 10
+            tolerance = max_dim * 0.5 if max_dim > 200 else 10
 
-        # Calculate axis-aligned bounding box
-        left = (x - width / 2 - self.offset_x) * self.zoom
-        right = (x + width / 2 - self.offset_x) * self.zoom
-        top = (y - height / 2 - self.offset_y) * self.zoom
-        bottom = (y + height / 2 - self.offset_y) * self.zoom
+        obj_left = x - width / 2
+        obj_right = x + width / 2
+        obj_top = y - height / 2
+        obj_bottom = y + height / 2
 
-        # Return True if any part is on screen, accounting for tolerance
-        return not (right < -tolerance or left > self.surface_width + tolerance or
-                    bottom < -tolerance or top > self.surface_height + tolerance)
+        return not (obj_right < left - tolerance or obj_left > right + tolerance or
+                    obj_bottom < top - tolerance or obj_top > bottom + tolerance)
+
+
+    def get_bounds(self):
+        """
+        Returns the current camera bounds in world coordinates as (left, top, right, bottom).
+        """
+        left = self.offset_x
+        top = self.offset_y
+        right = self.offset_x + self.surface_width / self.zoom
+        bottom = self.offset_y + self.surface_height / self.zoom
+        return top, bottom, left, right

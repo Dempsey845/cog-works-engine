@@ -2,6 +2,7 @@ import pymunk
 
 from cogworks.components.camera import Camera
 from cogworks.game_object import GameObject
+from cogworks.trigger_collision_manager import TriggerCollisionManager
 
 
 class Scene:
@@ -34,6 +35,7 @@ class Scene:
         self.physics_space = pymunk.Space()
         self.gravity = gravity
         self.physics_space.gravity = self.gravity
+        self.trigger_collision_manager = TriggerCollisionManager()
 
 
     def start(self):
@@ -93,13 +95,16 @@ class Scene:
 
     def update(self, dt: float) -> None:
         """
-        Update all GameObjects in the scene.
+        Update all GameObjects and CollisionManagers in the scene.
 
         Args:
             dt (float): Delta time since last frame.
         """
         for obj in self.game_objects:
             obj.update(dt)
+
+        if self.trigger_collision_manager:
+            self.trigger_collision_manager.update(dt)
 
     def fixed_update(self, dt: float) -> None:
         """

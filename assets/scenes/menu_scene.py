@@ -1,5 +1,4 @@
 from cogworks.components.ui.ui_button import UIButton
-from cogworks.components.ui.ui_fill_image import UIFillImage
 from cogworks.components.ui.ui_image import UIImage
 from cogworks.components.ui.ui_label import UILabel
 from cogworks.components.ui.ui_layout import UILayout

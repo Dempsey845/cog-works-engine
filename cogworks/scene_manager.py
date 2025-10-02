@@ -11,7 +11,7 @@ class Scene:
     Each Scene has its own camera GameObject by default.
     """
 
-    def __init__(self, name: str = "Scene"):
+    def __init__(self, name: str = "Scene", gravity=(0, 900)):
         """
         Initialize a Scene with a name and default camera.
 
@@ -32,7 +32,7 @@ class Scene:
         self.camera.add_component(self.camera_component)
 
         self.physics_space = pymunk.Space()
-        self.gravity = (0, 900)
+        self.gravity = gravity
         self.physics_space.gravity = self.gravity
 
 

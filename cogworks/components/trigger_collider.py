@@ -2,7 +2,7 @@ import pygame
 from cogworks import Component
 
 class TriggerCollider(Component):
-    def __init__(self, shape="rect", width=0, height=0, radius=0, layer="Default", collision_manager=None, debug=False, layer_mask=None):
+    def __init__(self, shape="rect", width=0, height=0, radius=0, layer="Default", debug=False, layer_mask=None):
         """
         Initializes a trigger collider component.
 
@@ -12,7 +12,6 @@ class TriggerCollider(Component):
             height (int): Height of the rectangle collider (ignored for circle).
             radius (int): Radius of the circle collider (ignored for rect).
             layer (str): Layer name for collision filtering.
-            collision_manager: Reference to collision manager to register with.
             debug (bool): If True, collider is drawn for debugging purposes.
             layer_mask (list[str] or None): List of layers this collider interacts with. None = all layers.
         """
@@ -26,7 +25,6 @@ class TriggerCollider(Component):
         self.center = None
         self._colliding_with = set()
         self.layer = layer
-        self.collision_manager = collision_manager
         self.debug = debug
         self.layer_mask = layer_mask
 
@@ -47,8 +45,7 @@ class TriggerCollider(Component):
                 self.radius = max(sprite.image.get_width(), sprite.image.get_height()) // 2
 
         # Register with collision manager
-        if self.collision_manager:
-            self.collision_manager.register(self)
+        self.game_object.scene.collision_manager.register(self)
 
     def update(self, dt):
         x, y = self.transform.get_local_position()
@@ -61,8 +58,7 @@ class TriggerCollider(Component):
             self.center = (x, y)
 
     def on_remove(self):
-        if self.collision_manager:
-            self.collision_manager.unregister(self)
+        self.game_object.scene.collision_manager.unregister(self)
 
     def intersects(self, other):
         """

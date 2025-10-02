@@ -45,7 +45,7 @@ class TriggerCollider(Component):
                 self.radius = max(sprite.image.get_width(), sprite.image.get_height()) // 2
 
         # Register with collision manager
-        self.game_object.scene.collision_manager.register(self)
+        self.game_object.scene.trigger_collision_manager.register(self)
 
     def update(self, dt):
         x, y = self.transform.get_local_position()

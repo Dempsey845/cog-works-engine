@@ -49,27 +49,44 @@ class UITransform(Component):
 
     def update_rect(self):
         parent_go = getattr(self.game_object, "parent", None)
+        parent_transform = None
+        if parent_go:
+            parent_transform = parent_go.get_component("UITransform")
+
         if parent_go and parent_go.has_component("UILayout"):
             # Layout manages this child's rect
             return
 
-        # Normal position calculation
         screen_width, screen_height = pygame.display.get_window_size()
-        width = int(self._width * screen_width) if self.relative else int(self._width)
-        height = int(self._height * screen_height) if self.relative else int(self._height)
-        x = int(self._x * screen_width) if self.relative else int(self._x)
-        y = int(self._y * screen_height) if self.relative else int(self._y)
+        if parent_transform and self.relative:
+            width = int(self._width * parent_transform.rect.width)
+            height = int(self._height * parent_transform.rect.height)
+            x = int(self._x * parent_transform.rect.width)
+            y = int(self._y * parent_transform.rect.height)
+        elif self.relative:
+            width = int(self._width * screen_width)
+            height = int(self._height * screen_height)
+            x = int(self._x * screen_width)
+            y = int(self._y * screen_height)
+        else:
+            width, height, x, y = int(self._width), int(self._height), int(self._x), int(self._y)
 
+        # Apply anchor first (relative to its own local rect)
         if self.anchor == "center":
             x -= width // 2
             y -= height // 2
         elif self.anchor == "topright":
-            x = screen_width - x - width
+            x -= width
         elif self.anchor == "bottomleft":
-            y = screen_height - y - height
+            y -= height
         elif self.anchor == "bottomright":
-            x = screen_width - x - width
-            y = screen_height - y - height
+            x -= width
+            y -= height
+
+        # Offset by parent global position
+        if parent_transform:
+            x += parent_transform.rect.x
+            y += parent_transform.rect.y
 
         self.rect = pygame.Rect(x, y, width, height)
 

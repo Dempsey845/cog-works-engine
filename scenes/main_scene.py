@@ -2,6 +2,8 @@ import random
 
 from engine.components.background import Background
 from engine.components.ui.ui_button import UIButton
+from engine.components.ui.ui_fill_image import UIFillImage
+from engine.components.ui.ui_image import UIImage
 from engine.components.ui.ui_transform import UITransform
 from engine.game_object import GameObject
 from engine.components.transform import Transform
@@ -40,9 +42,31 @@ def setup_main_scene(engine):
         engine.change_active_scene("Menu")
 
     exit_btn = GameObject("ExitButton", 5)
-    exit_btn.add_component(UITransform(width=0.2, height=0.05, y=0.02, x=0.02, anchor="topright"))
+    exit_btn.add_component(UITransform(width=0.2, height=0.05, y=0.02, x=0.98, anchor="topright"))
     exit_btn.add_component(UIButton("Exit", on_click=exit_game, bg_color=(255, 0, 0), border_radius=20))
     main_scene.add_game_object(exit_btn)
+
+    # --- Heart Background Image ---
+    heart_background = GameObject("HeartBackground", 5)
+    heart_background.add_component(UITransform(
+        width=0.1, height=0.1, y=0, x=0, anchor="topleft"
+    ))
+    background_image = UIImage("images/heart_background.png")
+    heart_background.add_component(background_image)
+    main_scene.add_game_object(heart_background)
+
+    # --- Health Fill Image ---
+    heart_fill_image = GameObject("HeartFill")
+
+    # Add UITransform as child, relative to parent
+    heart_fill_image.add_component(UITransform())
+
+    # Add the fill image component
+    fill_image = UIFillImage("images/heart.png", fill_direction="vertical", fill_origin="bottom",  fill_speed=0.5)
+    heart_fill_image.add_component(fill_image)
+    fill_image.set_fill(0.1, smooth=True)
+
+    heart_background.add_child(heart_fill_image)
 
     # --- Test Object ---
     test_object = GameObject("Test")
@@ -77,7 +101,7 @@ def setup_main_scene(engine):
     floor = GameObject("Floor")
     floor_transform = floor.get_component(Transform)
     floor_transform.set_local_scale(5)
-    floor_transform.set_local_rotation(15)
+    floor_transform.set_local_rotation(0)
 
     floor_sprite = Sprite("images/floor.png")
     floor.add_component(floor_sprite)

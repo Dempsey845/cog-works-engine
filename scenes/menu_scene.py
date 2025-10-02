@@ -1,4 +1,5 @@
 from engine.components.ui.ui_button import UIButton
+from engine.components.ui.ui_fill_image import UIFillImage
 from engine.components.ui.ui_image import UIImage
 from engine.components.ui.ui_label import UILabel
 from engine.components.ui.ui_layout import UILayout

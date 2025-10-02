@@ -32,7 +32,8 @@ class Scene:
         self.camera.add_component(self.camera_component)
 
         self.physics_space = pymunk.Space()
-        self.physics_space.gravity = (0, 900)
+        self.gravity = (0, 900)
+        self.physics_space.gravity = self.gravity
 
 
     def start(self):
@@ -137,7 +138,7 @@ class Scene:
     def restart(self):
         # Create a new physics space
         self.physics_space = pymunk.Space()
-        self.physics_space.gravity = (0, 900)
+        self.physics_space.gravity = self.gravity
 
         for go in self.game_objects:
             go.reset_to_start()

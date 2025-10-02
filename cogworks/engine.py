@@ -64,9 +64,9 @@ class Engine:
         self.start_active_scene()
         self.scene_manager.restart_active_scene()
 
-    def create_scene(self, scene_name: str) -> Scene:
+    def create_scene(self, scene_name: str, gravity=(0, 900)) -> Scene:
         """Create a new scene and add it to scene manager."""
-        new_scene = Scene(scene_name)
+        new_scene = Scene(scene_name, gravity)
         self.add_scene(new_scene)
         return new_scene
 

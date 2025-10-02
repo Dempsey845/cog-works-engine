@@ -1,84 +1,116 @@
 import pygame
 from engine.component import Component
-from pygame_wrappers.window import Window
+from pygame_wrappers.event_manager import EventManager
 
-# Map string anchor names to rect attributes
-anchor_map = {
-    "topleft": "topleft",
-    "topright": "topright",
-    "bottomleft": "bottomleft",
-    "bottomright": "bottomright",
-    "midtop": "midtop",
-    "midbottom": "midbottom",
-    "midleft": "midleft",
-    "midright": "midright",
-    "center": "center"
-}
 
 class UITransform(Component):
     """
-    Defines the screen-space position and size of a UI element.
-    Supports normalised (relative) or absolute coordinates.
+    UITransform defines the position, size, and anchor of a UI element.
+
+    Features:
+        - Supports absolute or relative positioning and sizing.
+        - Anchors elements to corners or center of the screen.
+        - Updates automatically when the window is resized.
+        - Integrates with `UILayout` to allow parent-managed positioning.
+        - Provides setters for position, size, and anchor.
     """
 
-    def __init__(self, x=0.5, y=0.5, width=0.25, height=0.1,
-                 anchor="center", relative=True, debug=False):
+    def __init__(self, x=0, y=0, width=1, height=1, anchor="topleft", relative=True):
         """
+        Initialise a UITransform component.
+
         Args:
-            x, y (float or int): Position of the element.
-                - If relative=True, values are in [0.0–1.0] (fraction of screen).
-                - If relative=False, values are absolute pixels.
-            width, height (float or int): Size of the element.
-                - If relative=True, values are fractions of screen size.
-                - If relative=False, values are absolute pixels.
-            anchor (str): Anchor point ('topleft', 'center', etc.).
-            relative (bool): Whether to use relative (normalised) coordinates.
-            debug (bool): If True, draw bounding box.
+            x (int | float, optional): X position of the element. If `relative` is True,
+                                       treated as a fraction of screen width (default: 0).
+            y (int | float, optional): Y position of the element. If `relative` is True,
+                                       treated as a fraction of screen height (default: 0).
+            width (int | float, optional): Width of the element. If `relative` is True,
+                                           treated as a fraction of screen width (default: 1).
+            height (int | float, optional): Height of the element. If `relative` is True,
+                                            treated as a fraction of screen height (default: 1).
+            anchor (str, optional): Alignment of the rect relative to (x, y).
+                                    Options: "topleft", "topright", "bottomleft", "bottomright", "center".
+                                    (default: "topleft")
+            relative (bool, optional): If True, interpret x, y, width, height as relative
+                                       fractions of screen size. If False, interpret as pixels. (default: True)
         """
         super().__init__()
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
         self.anchor = anchor
         self.relative = relative
-        self.debug = debug
+        self._x, self._y = x, y
+        self._width, self._height = width, height
         self.rect = pygame.Rect(0, 0, 0, 0)
-        self.update_rect()
-        Window.get_instance().event_manager.subscribe(self.on_window_event)
+        self.layout = None
 
-    def on_window_event(self, event):
-        if event.type == pygame.VIDEORESIZE:
-            self.update_rect()
+    def start(self):
+        EventManager.get_instance().subscribe(self._on_event)
+        self.layout = self.game_object.get_component("UILayout")
+        self.update_rect()
 
     def update_rect(self):
-        """Recalculate rect using position, size, and anchor, adapting to window size."""
-        window = Window.get_instance()
-        screen_w, screen_h = window.get_size()
+        parent_go = getattr(self.game_object, "parent", None)
+        if parent_go and parent_go.has_component("UILayout"):
+            # Layout manages this child's rect
+            return
 
-        if self.relative:
-            abs_x = int(self.x * screen_w)
-            abs_y = int(self.y * screen_h)
-            abs_w = max(1, int(self.width * screen_w))
-            abs_h = max(1, int(self.height * screen_h))
-        else:
-            abs_x, abs_y = self.x, self.y
-            abs_w = max(1, int(self.width))
-            abs_h = max(1, int(self.height))
+        # Normal position calculation
+        screen_width, screen_height = pygame.display.get_window_size()
+        width = int(self._width * screen_width) if self.relative else int(self._width)
+        height = int(self._height * screen_height) if self.relative else int(self._height)
+        x = int(self._x * screen_width) if self.relative else int(self._x)
+        y = int(self._y * screen_height) if self.relative else int(self._y)
 
-        # initialise rect if it doesn't exist
-        if not hasattr(self, "rect") or self.rect is None:
-            self.rect = pygame.Rect(0, 0, abs_w, abs_h)
-        else:
-            self.rect.size = (abs_w, abs_h)
+        if self.anchor == "center":
+            x -= width // 2
+            y -= height // 2
+        elif self.anchor == "topright":
+            x = screen_width - x - width
+        elif self.anchor == "bottomleft":
+            y = screen_height - y - height
+        elif self.anchor == "bottomright":
+            x = screen_width - x - width
+            y = screen_height - y - height
 
-        if self.anchor in anchor_map:
-            setattr(self.rect, anchor_map[self.anchor], (abs_x, abs_y))
-        else:
-            # default fallback
-            print(f"[WARNING] Invalid anchor '{self.anchor}' provided. Falling back to 'topleft'.")
-            self.rect.topleft = (abs_x, abs_y)
+        self.rect = pygame.Rect(x, y, width, height)
 
-    def render(self, surface):
-        if self.debug:
-            pygame.draw.rect(surface, (0, 255, 0), self.rect, 1)
+    def set_position(self, x, y):
+        """
+        Set the element's position and update its rect.
+
+        Args:
+            x (int | float): X position (absolute pixels or relative fraction).
+            y (int | float): Y position (absolute pixels or relative fraction).
+        """
+        self._x, self._y = x, y
+        self.update_rect()
+
+    def set_size(self, width, height):
+        """
+        Set the element's size and update its rect.
+
+        Args:
+            width (int | float): Width (absolute pixels or relative fraction).
+            height (int | float): Height (absolute pixels or relative fraction).
+        """
+        self._width, self._height = width, height
+        self.update_rect()
+
+    def set_anchor(self, anchor):
+        """
+        Set the element's anchor and update its rect.
+
+        Args:
+            anchor (str): Alignment of the rect relative to (x, y).
+                          Options: "topleft", "topright", "bottomleft", "bottomright", "center".
+        """
+        self.anchor = anchor
+        self.update_rect()
+
+    def _on_event(self, event):
+        if event.type == pygame.VIDEORESIZE:
+            self.update_rect()
+            if self.layout:
+                self.layout.update_layout()
+
+    def on_destroy(self):
+        EventManager.get_instance().unsubscribe(self._on_event)

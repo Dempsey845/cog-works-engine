@@ -1,8 +1,9 @@
 import random
 
 from engine.components.background import Background
+from engine.components.ui.ui_button import UIButton
+from engine.components.ui.ui_transform import UITransform
 from engine.game_object import GameObject
-from engine.game_objects.ui.button import Button
 from engine.components.transform import Transform
 from engine.components.sprite import Sprite
 from engine.components.rigidbody2d import Rigidbody2D
@@ -38,22 +39,10 @@ def setup_main_scene(engine):
     def exit_game(go):
         engine.change_active_scene("Menu")
 
-    exit_button = Button(
-        "Exit",
-        exit_game,
-        width=0.1,
-        height=0.05,
-        x=1,
-        y=0,
-        anchor="topright",
-        bg_color=(255, 0, 0),
-        hover_color=(255, 50, 50),
-        min_width=100,
-        min_height=50,
-        max_width=100,
-        max_height=50
-    )
-    main_scene.add_game_object(exit_button)
+    exit_btn = GameObject("ExitButton", 5)
+    exit_btn.add_component(UITransform(width=0.2, height=0.1, anchor="topright"))
+    exit_btn.add_component(UIButton("Exit", on_click=exit_game, bg_color=(255, 0, 0)))
+    main_scene.add_game_object(exit_btn)
 
     # --- Test Object ---
     test_object = GameObject("Test")

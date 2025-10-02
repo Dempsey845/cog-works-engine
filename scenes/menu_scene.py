@@ -1,6 +1,8 @@
-from engine.game_objects.ui.button import Button
-from engine.game_objects.ui.label import Label
-from engine.game_objects.ui.ui_image import UIImage
+from engine.components.ui.ui_button import UIButton
+from engine.components.ui.ui_image import UIImage
+from engine.components.ui.ui_layout import UILayout
+from engine.components.ui.ui_transform import UITransform
+from engine.game_object import GameObject
 
 
 def setup_menu_scene(engine):
@@ -9,12 +11,30 @@ def setup_menu_scene(engine):
     def start_game(go):
         engine.change_active_scene("Main")
 
-    title_label = Label("Cog Works Engine", y=0, anchor="midtop", bg_color=(0, 0, 255))
-    start_button = Button("Start Game", start_game, y=1, anchor="midbottom", min_width=200, min_height=50, max_width=200, max_height=50, z_index=2)
-    logo_image = UIImage("images/cog_works_icon_2.png", from_engine=True)
-    menu_scene.add_game_object(title_label)
-    menu_scene.add_game_object(start_button)
-    menu_scene.add_game_object(logo_image)
+    def exit_game(go):
+        engine.quit()
 
+    # Create a layout
+    layout = GameObject("MenuLayout")
+    layout.add_component(UITransform(x=0.5, y=0.5, width=0.4, height=0.6, anchor="center"))
+    layout.add_component(UILayout(vertical=True, spacing=10))
+    menu_scene.add_game_object(layout)
+
+    # Logo
+    logo = GameObject("LogoImage")
+    logo.add_component(UITransform(width=0.5, height=0.5))
+    logo.add_component(UIImage("images/cog_works_icon_2.png", True))
+    layout.add_child(logo)
+
+    # Add buttons
+    play_btn = GameObject("PlayButton")
+    play_btn.add_component(UITransform(width=1, height=0.2))  # relative to parent layout
+    play_btn.add_component(UIButton("Play", on_click=start_game))
+    layout.add_child(play_btn)
+
+    exit_btn = GameObject("ExitButton")
+    exit_btn.add_component(UITransform(width=1, height=0.2))
+    exit_btn.add_component(UIButton("Exit", on_click=exit_game))
+    layout.add_child(exit_btn)
 
     return menu_scene

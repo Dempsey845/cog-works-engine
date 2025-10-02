@@ -90,10 +90,15 @@ class GameObject:
     def get_component(self, component_type):
         """
         Retrieve the first component of a given type.
+        Accepts either the class type or a string with the class name.
         """
         for comp in self.components:
-            if isinstance(comp, component_type):
-                return comp
+            if isinstance(component_type, str):
+                if comp.__class__.__name__ == component_type:
+                    return comp
+            else:
+                if isinstance(comp, component_type):
+                    return comp
         return None
 
     def has_component(self, component) -> bool:
@@ -101,12 +106,7 @@ class GameObject:
         Check if the GameObject has a component of the given type or class name.
         Accepts either a class type or a string with the component's class name.
         """
-        if isinstance(component, str):
-            # Check by class name
-            return any(c.__class__.__name__ == component for c in self.components)
-        else:
-            # Check by type
-            return self.get_component(component) is not None
+        return self.get_component(component) is not None
 
     def save_start_state(self):
         # Store a deep copy of the component states

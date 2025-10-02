@@ -1,4 +1,4 @@
-from engine.utils.asset_loader import load_engine_image
+from cogworks.utils.asset_loader import load_engine_image
 
 
 class Window:

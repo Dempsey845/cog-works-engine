@@ -1,8 +1,8 @@
 import pygame
-from engine.component import Component
-from engine.components.sprite import Sprite
-from engine.components.transform import Transform
-from pygame_wrappers.event_manager import EventManager
+from cogworks.component import Component
+from cogworks.components.sprite import Sprite
+from cogworks.components.transform import Transform
+from cogworks.pygame_wrappers.event_manager import EventManager
 
 
 class Background(Component):

@@ -1,4 +1,4 @@
-from engine.component import Component
+from cogworks.component import Component
 
 class UIRenderer(Component):
     def render(self, surface):

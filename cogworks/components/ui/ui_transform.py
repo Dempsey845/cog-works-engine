@@ -1,6 +1,6 @@
 import pygame
-from engine.component import Component
-from pygame_wrappers.event_manager import EventManager
+from cogworks.component import Component
+from cogworks.pygame_wrappers.event_manager import EventManager
 
 
 class UITransform(Component):

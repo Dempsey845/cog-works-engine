@@ -1,10 +1,10 @@
 import pygame
-from engine.component import Component
-from engine.components.rigidbody2d import Rigidbody2D
-from pygame_wrappers.input_manager import InputManager
+from cogworks.components.rigidbody2d import Rigidbody2D
+from cogworks.components.script_component import ScriptComponent
+from cogworks.pygame_wrappers.input_manager import InputManager
 
 
-class PlatformerMovement(Component):
+class PlatformerMovement(ScriptComponent):
     """
     Simple 2D platformer movement using the Rigidbody2D system.
     Requires Rigidbody2D for physics and collision handling.
@@ -45,5 +45,3 @@ class PlatformerMovement(Component):
 
         # Update grounded state
         self.is_grounded = self.rigidbody.check_grounded()
-
-

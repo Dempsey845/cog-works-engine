@@ -1,6 +1,6 @@
-from engine.engine import Engine
-from scenes.main_scene import setup_main_scene
-from scenes.menu_scene import setup_menu_scene
+from cogworks.engine import Engine
+from assets.scenes.main_scene import setup_main_scene
+from assets.scenes.menu_scene import setup_menu_scene
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
@@ -13,5 +13,5 @@ menu_scene = setup_menu_scene(engine)
 
 engine.set_active_scene("Menu")
 
-# Run engine
+# Run cogworks
 engine.run()

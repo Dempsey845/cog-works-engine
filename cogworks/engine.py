@@ -1,20 +1,20 @@
-# engine.py
 import pygame
 
-from engine.scene_manager import SceneManager, Scene
-from pygame_wrappers.window import Window
-from pygame_wrappers.input_manager import InputManager
-from pygame_wrappers.event_manager import EventManager
+from cogworks.pygame_wrappers.window import Window
+from cogworks.pygame_wrappers.input_manager import InputManager
+from cogworks.pygame_wrappers.event_manager import EventManager
+from cogworks.scene_manager import Scene, SceneManager
+
 
 class Engine:
     """
-    The main engine class that manages the game/application loop.
+    The main cogworks class that manages the game/application loop.
     Provides update, render, event handling, and scene management.
     """
 
     def __init__(self, width: int = 500, height: int = 500, caption: str = "CogWorks Engine", fps: int = 60, world_bound_x: int = 5000, world_bound_y: int = 5000):
         """
-        Initialise the engine with a window, scene manager, and runtime state.
+        Initialise the cogworks with a window, scene manager, and runtime state.
 
         Args:
             width (int, optional): Initial width of the window. Defaults to 500.
@@ -73,7 +73,7 @@ class Engine:
     # ---------------- Event Handling ---------------- #
 
     def handle_event(self, event):
-        """Handle engine-specific events like QUIT."""
+        """Handle cogworks-specific events like QUIT."""
         if event.type == pygame.QUIT:
             self.quit()
 
@@ -94,12 +94,12 @@ class Engine:
         pygame.display.flip()
 
     def quit(self):
-        """Stop the engine loop and quit pygame."""
+        """Stop the cogworks loop and quit pygame."""
         self.running = False
 
     def run(self):
         """
-        Run the main engine loop with a fixed timestep for physics.
+        Run the main cogworks loop with a fixed timestep for physics.
         """
         fixed_dt = 1 / 60.0  # 60 FPS physics step
         accumulator = 0.0

@@ -1,14 +1,21 @@
-from engine.component import Component
-from engine.components.camera import Camera
-from engine.components.transform import Transform
+from cogworks.components.camera import Camera
+from cogworks.components.script_component import ScriptComponent
+from cogworks.components.transform import Transform
 
 
-class CameraController(Component):
+class CameraController(ScriptComponent):
     """
     CameraController allows a camera to follow a target Transform with optional smoothing and offsets.
     """
 
-    def __init__(self, target_transform: Transform, offset_x: float = 0, offset_y: float = 0, smoothing: float = 5.0, fixed: bool = False):
+    def __init__(
+        self,
+        target_transform: Transform,
+        offset_x: float = 0,
+        offset_y: float = 0,
+        smoothing: float = 5.0,
+        fixed: bool = False
+    ):
         """
         Args:
             target_transform (Transform): The Transform of the target GameObject.

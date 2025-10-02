@@ -1,18 +1,16 @@
 import random
 
-from engine.components.background import Background
-from engine.components.ui.ui_button import UIButton
-from engine.components.ui.ui_fill_image import UIFillImage
-from engine.components.ui.ui_image import UIImage
-from engine.components.ui.ui_transform import UITransform
-from engine.game_object import GameObject
-from engine.components.transform import Transform
-from engine.components.sprite import Sprite
-from engine.components.rigidbody2d import Rigidbody2D
-from engine.components.platformer_movement import PlatformerMovement
-from engine.components.camera_controller import CameraController
-from engine.components.linebody2d import LineBody2D
-from engine.components.test_component import TestComponent
+from cogworks.components.background import Background
+from cogworks.components.ui.ui_button import UIButton
+from cogworks.components.ui.ui_fill_image import UIFillImage
+from cogworks.components.ui.ui_image import UIImage
+from cogworks.components.ui.ui_transform import UITransform
+from cogworks.game_object import GameObject
+from cogworks.components.transform import Transform
+from cogworks.components.sprite import Sprite
+from cogworks.components.rigidbody2d import Rigidbody2D
+from assets.scripts.platformer_movement import PlatformerMovement
+from assets.scripts.camera_controller import CameraController
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
@@ -68,14 +66,6 @@ def setup_main_scene(engine):
 
     heart_background.add_child(heart_fill_image)
 
-    # --- Test Object ---
-    test_object = GameObject("Test")
-    test_object.add_component(Sprite("images/shape.png"))
-    test_object.add_component(TestComponent())
-    test_object.transform.set_world_rotation(90)
-    test_object.transform.debug = True
-    main_scene.add_game_object(test_object)
-
     # --- Circle Container & Circles ---
     circle_container = GameObject("Circle Container")
     main_scene.add_game_object(circle_container)
@@ -105,7 +95,7 @@ def setup_main_scene(engine):
 
     floor_sprite = Sprite("images/floor.png")
     floor.add_component(floor_sprite)
-    floor.add_component(LineBody2D(static=True, debug=True, offset=(0, -250)))
+    floor.add_component(Rigidbody2D(static=True, debug=True))
 
     floor_transform.set_world_position(WINDOW_WIDTH, WINDOW_HEIGHT)
 

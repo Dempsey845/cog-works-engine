@@ -1,7 +1,7 @@
 import pygame
-from engine.components.ui.ui_transform import UITransform
-from engine.components.ui.ui_renderer import UIRenderer
-from pygame_wrappers.event_manager import EventManager
+from cogworks.components.ui.ui_transform import UITransform
+from cogworks.components.ui.ui_renderer import UIRenderer
+from cogworks.pygame_wrappers.event_manager import EventManager
 
 class UIButton(UIRenderer):
     """

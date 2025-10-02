@@ -4,10 +4,10 @@ import importlib.resources as res
 
 def load_engine_image(relative_path: str) -> pygame.Surface:
     """
-    Load an image bundled inside the engine package.
+    Load an image bundled inside the cogworks package.
     Example: load_engine_image("images/default.png")
     """
-    with res.files("engine.engine_assets").joinpath(relative_path).open("rb") as f:
+    with res.files("cogworks.engine_assets").joinpath(relative_path).open("rb") as f:
         img = pygame.image.load(f).convert_alpha()
     _ensure_pygame_display()
     return img

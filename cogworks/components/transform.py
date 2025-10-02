@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from engine.component import Component
+from cogworks.component import Component
 
 class Transform(Component):
     """

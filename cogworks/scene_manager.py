@@ -1,8 +1,7 @@
 import pymunk
 
-from engine.components.camera import Camera
-from engine.components.transform import Transform
-from engine.game_object import GameObject
+from cogworks.components.camera import Camera
+from cogworks.game_object import GameObject
 
 
 class Scene:
@@ -147,7 +146,7 @@ class Scene:
         self.start_states = {}
 
         def save_go_state(go):
-            transform = go.get_component(Transform)
+            transform = go.get_component("Transform")
             if transform:
                 self.start_states[go.uuid] = {
                     "local_x": transform.local_x,
@@ -165,7 +164,7 @@ class Scene:
 
     def get_window_size(self) -> tuple[int, int]:
         """
-        Get the current window size from the engine.
+        Get the current window size from the cogworks.
 
         Returns:
             tuple[int, int]: Width and height of the window.
@@ -194,11 +193,11 @@ class SceneManager:
 
     def add_scene(self, scene: Scene, engine) -> None:
         """
-        Add a scene to the manager and assign it an engine reference.
+        Add a scene to the manager and assign it an cogworks reference.
 
         Args:
             scene (Scene): The scene to add.
-            engine: The game engine instance.
+            engine: The game cogworks instance.
         """
         scene.engine = engine
         self.scenes[scene.name] = scene

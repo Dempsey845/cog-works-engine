@@ -1,7 +1,7 @@
 import math
 import pymunk
-from engine.component import Component
-from engine.components.transform import Transform
+from cogworks.component import Component
+from cogworks.components.transform import Transform
 
 
 class Rigidbody2D(Component):

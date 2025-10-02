@@ -1,7 +1,7 @@
 import pygame
-from engine.components.ui.ui_transform import UITransform
-from engine.components.ui.ui_renderer import UIRenderer
-from engine.utils.asset_loader import load_engine_image, load_user_image
+from cogworks.components.ui.ui_transform import UITransform
+from cogworks.components.ui.ui_renderer import UIRenderer
+from cogworks.utils.asset_loader import load_engine_image, load_user_image
 
 
 class UIImage(UIRenderer):
@@ -9,7 +9,7 @@ class UIImage(UIRenderer):
     UIImage is a UI component for rendering images within a defined rectangle.
 
     Features:
-        - Loads images either from engine assets or user-provided files.
+        - Loads images either from cogworks assets or user-provided files.
         - Automatically scales the image to fit inside the UITransform's rect
           while preserving aspect ratio (no stretching).
         - Centers the image inside its assigned rect.
@@ -22,7 +22,7 @@ class UIImage(UIRenderer):
 
         Args:
             image_path (str): Path to the image file.
-            load_engine (bool, optional): If True, loads from engine assets.
+            load_engine (bool, optional): If True, loads from cogworks assets.
                                           If False, loads from user assets. (default: False)
         """
         super().__init__()
@@ -34,7 +34,7 @@ class UIImage(UIRenderer):
 
         Args:
             image_path (str): Path to the new image file.
-            load_engine (bool, optional): If True, loads from engine assets.
+            load_engine (bool, optional): If True, loads from cogworks assets.
                                           If False, loads from user assets. (default: False)
 
         Example:

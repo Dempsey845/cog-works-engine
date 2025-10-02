@@ -1,6 +1,6 @@
 import pygame
-from engine.components.ui.ui_transform import UITransform
-from engine.components.ui.ui_image import UIImage
+from cogworks.components.ui.ui_transform import UITransform
+from cogworks.components.ui.ui_image import UIImage
 
 
 class UIFillImage(UIImage):

@@ -1,7 +1,7 @@
 import pygame
 
-from engine.component import Component
-from engine.components.ui.ui_transform import UITransform
+from cogworks.component import Component
+from cogworks.components.ui.ui_transform import UITransform
 
 
 class UILayout(Component):

@@ -1,10 +1,10 @@
-from engine.components.ui.ui_button import UIButton
-from engine.components.ui.ui_fill_image import UIFillImage
-from engine.components.ui.ui_image import UIImage
-from engine.components.ui.ui_label import UILabel
-from engine.components.ui.ui_layout import UILayout
-from engine.components.ui.ui_transform import UITransform
-from engine.game_object import GameObject
+from cogworks.components.ui.ui_button import UIButton
+from cogworks.components.ui.ui_fill_image import UIFillImage
+from cogworks.components.ui.ui_image import UIImage
+from cogworks.components.ui.ui_label import UILabel
+from cogworks.components.ui.ui_layout import UILayout
+from cogworks.components.ui.ui_transform import UITransform
+from cogworks.game_object import GameObject
 
 
 def setup_menu_scene(engine):

@@ -1,9 +1,8 @@
 import pygame
-from engine.component import Component
-from engine.components.linebody2d import LineBody2D
-from engine.components.transform import Transform
-from engine.components.rigidbody2d import Rigidbody2D
-from engine.utils.asset_loader import load_user_image
+from cogworks.component import Component
+from cogworks.components.transform import Transform
+from cogworks.components.rigidbody2d import Rigidbody2D
+from cogworks.utils.asset_loader import load_user_image
 
 
 class Sprite(Component):
@@ -37,14 +36,6 @@ class Sprite(Component):
             # Use unscaled image size for collider
             rb.width = self.original_image.get_width()
             rb.height = self.original_image.get_height()
-
-        # Line rigidbody config
-        lb: LineBody2D = self.game_object.get_component(LineBody2D)
-        if lb and lb.point_a == (0, 0) and lb.point_b == (0, 0):
-            # Initialise the line points scaled to the current transform
-            half_width = (self.original_image.get_width() / 2) * self.transform.local_scale_x
-            lb.point_a = (-half_width, 0)
-            lb.point_b = (half_width, 0)
 
         # Apply the transform once on start
         self._apply_transform()

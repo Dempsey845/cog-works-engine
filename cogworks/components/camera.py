@@ -1,6 +1,6 @@
-from engine.component import Component
-from pygame_wrappers.event_manager import EventManager
-from pygame_wrappers.window import Window
+from cogworks.component import Component
+from cogworks.pygame_wrappers.event_manager import EventManager
+from cogworks.pygame_wrappers.window import Window
 
 
 class Camera(Component):

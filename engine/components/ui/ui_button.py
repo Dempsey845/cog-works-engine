@@ -14,17 +14,25 @@ class UIButton(UIRenderer):
         - Supports a callback function to be executed on click.
     """
 
-    def __init__(self, text, on_click=None, font_size=24, text_color=(255,255,255), bg_color=(0,0,255)):
+    def __init__(
+        self,
+        text,
+        on_click=None,
+        font_size=24,
+        text_color=(255, 255, 255),
+        bg_color=(0, 0, 255),
+        border_radius=0
+    ):
         """
         Initialise a UIButton component.
 
         Args:
             text (str): The text displayed on the button.
-            on_click (callable, optional): A function to call when the button is clicked.
-                                           It will receive the button's game_object as an argument.
+            on_click (callable, optional): Function to call when the button is clicked.
             font_size (int, optional): Size of the text font (default: 24).
             text_color (tuple[int,int,int], optional): RGB colour of the text (default: white).
             bg_color (tuple[int,int,int], optional): RGB background colour of the button (default: blue).
+            border_radius (int, optional): Radius of button corners for rounded edges (default: 0, sharp corners).
         """
         super().__init__()
         self.text = text
@@ -32,6 +40,7 @@ class UIButton(UIRenderer):
         self.font = pygame.font.Font(None, font_size)
         self.text_color = text_color
         self.bg_color = bg_color
+        self.border_radius = border_radius
         self.hovered = False
 
         # Subscribe to global event manager to handle mouse events
@@ -46,8 +55,8 @@ class UIButton(UIRenderer):
 
     def render(self, surface):
         rect = self.game_object.get_component(UITransform).rect
-        color = tuple(min(c+50,255) if self.hovered else c for c in self.bg_color)
-        pygame.draw.rect(surface, color, rect)
+        color = tuple(min(c + 50, 255) if self.hovered else c for c in self.bg_color)
+        pygame.draw.rect(surface, color, rect, border_radius=self.border_radius)
         text_surf = self.font.render(self.text, True, self.text_color)
         surface.blit(text_surf, text_surf.get_rect(center=rect.center))
 

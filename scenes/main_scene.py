@@ -40,8 +40,8 @@ def setup_main_scene(engine):
         engine.change_active_scene("Menu")
 
     exit_btn = GameObject("ExitButton", 5)
-    exit_btn.add_component(UITransform(width=0.2, height=0.1, anchor="topright"))
-    exit_btn.add_component(UIButton("Exit", on_click=exit_game, bg_color=(255, 0, 0)))
+    exit_btn.add_component(UITransform(width=0.2, height=0.05, y=0.02, x=0.02, anchor="topright"))
+    exit_btn.add_component(UIButton("Exit", on_click=exit_game, bg_color=(255, 0, 0), border_radius=20))
     main_scene.add_game_object(exit_btn)
 
     # --- Test Object ---

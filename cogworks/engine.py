@@ -44,30 +44,17 @@ class Engine:
 
     # ---------------- Scene Management ---------------- #
 
-    def add_scene(self, scene: Scene) -> None:
-        """Add a scene to the scene manager."""
-        self.scene_manager.add_scene(scene, self)
-
     def set_active_scene(self, scene_name: str) -> None:
-        """Set the currently active scene by name."""
-        self.scene_manager.set_active_scene(scene_name)
-
-    def start_active_scene(self):
-        """
-        Call start() on the active scene if it exists.
-        """
-        self.scene_manager.start_active_scene()
-
-    def change_active_scene(self, scene_name: str) -> None:
         """Change the currently active scene by name."""
-        self.set_active_scene(scene_name)
-        self.start_active_scene()
-        self.scene_manager.restart_active_scene()
+        if self.scene_manager.active_scene is None:
+            self.scene_manager.set_active_scene(scene_name)
+        else:
+            self.scene_manager.change_active_scene(scene_name)
 
     def create_scene(self, scene_name: str, gravity=(0, 900)) -> Scene:
         """Create a new scene and add it to scene manager."""
         new_scene = Scene(scene_name, gravity)
-        self.add_scene(new_scene)
+        self.scene_manager.add_scene(new_scene, self)
         return new_scene
 
     # ---------------- Event Handling ---------------- #

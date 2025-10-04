@@ -191,6 +191,7 @@ class GameObject:
         Call start() on all components and children.
         """
         for comp in self.components:
+            comp.on_enabled()
             comp.start()
         for child in self.children:
             child._active = True

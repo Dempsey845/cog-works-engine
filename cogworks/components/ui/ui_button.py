@@ -43,22 +43,28 @@ class UIButton(UIRenderer):
         self.border_radius = border_radius
         self.hovered = False
 
+
+    def on_enabled(self):
         # Subscribe to global event manager to handle mouse events
         EventManager.get_instance().subscribe(self.handle_event)
 
+    def on_remove(self):
+        EventManager.get_instance().unsubscribe(self.handle_event)
+
+    def on_disabled(self):
+        EventManager.get_instance().unsubscribe(self.handle_event)
+
     def handle_event(self, event):
-        rect = self.game_object.get_component(UITransform).rect
-        if event.type == pygame.MOUSEMOTION:
-            self.hovered = rect.collidepoint(event.pos)
-        elif event.type == pygame.MOUSEBUTTONDOWN and self.hovered and self.on_click:
+        if event.type == pygame.MOUSEBUTTONDOWN and self.hovered:
             self.on_click(self.game_object)
 
     def render(self, surface):
+        rect = self.game_object.get_component(UITransform).rect
+        mouse_pos = pygame.mouse.get_pos()
+        self.hovered = rect.collidepoint(mouse_pos)
+
         rect = self.game_object.get_component(UITransform).rect
         color = tuple(min(c + 50, 255) if self.hovered else c for c in self.bg_color)
         pygame.draw.rect(surface, color, rect, border_radius=self.border_radius)
         text_surf = self.font.render(self.text, True, self.text_color)
         surface.blit(text_surf, text_surf.get_rect(center=rect.center))
-
-    def on_destroy(self):
-        EventManager.get_instance().unsubscribe(self.handle_event)

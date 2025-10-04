@@ -11,8 +11,16 @@ class Camera(Component):
         self.zoom = 1.0  # 1.0 = normal, <1.0 = zoom out, >1.0 = zoom in
         self.surface_width, self.surface_height = Window.get_instance().get_size()
 
+
+    def on_enabled(self):
         # Subscribe to window resize events
         EventManager.get_instance().subscribe(self.handle_window_event)
+
+    def on_disabled(self):
+        EventManager.get_instance().unsubscribe(self.handle_window_event)
+
+    def on_remove(self) -> None:
+        EventManager.get_instance().unsubscribe(self.handle_window_event)
 
     def handle_window_event(self, event):
         """Update surface size on window resize."""
@@ -25,6 +33,42 @@ class Camera(Component):
         """Move the camera by a given delta."""
         self.offset_x += dx
         self.offset_y += dy
+
+    def get_world_position_of_point(self, point: str = "center"):
+        """
+        Get the world position of a point on the camera view.
+
+        Args:
+            point (str): The point on the camera view. Options:
+                'center', 'topleft', 'topright', 'topcenter',
+                'bottomleft', 'bottomright', 'bottomcenter',
+                'leftcenter', 'rightcenter'
+
+        Returns:
+            tuple: (world_x, world_y)
+        """
+        # Screen positions
+        sw, sh = self.surface_width, self.surface_height
+        points = {
+            "center": (sw / 2, sh / 2),
+            "topleft": (0, 0),
+            "topright": (sw, 0),
+            "topcenter": (sw / 2, 0),
+            "bottomleft": (0, sh),
+            "bottomright": (sw, sh),
+            "bottomcenter": (sw / 2, sh),
+            "leftcenter": (0, sh / 2),
+            "rightcenter": (sw, sh / 2),
+        }
+
+        if point not in points:
+            raise ValueError(f"Invalid point '{point}' for camera. Valid options: {list(points.keys())}")
+
+        screen_x, screen_y = points[point]
+        # Convert screen coordinates to world coordinates
+        world_x, world_y = self.screen_to_world(screen_x, screen_y)
+
+        return world_x, world_y
 
     def set_zoom(self, zoom: float):
         """Set the camera zoom level."""

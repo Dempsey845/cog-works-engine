@@ -54,17 +54,38 @@ class Transform(Component):
             self.set_local_rotation(state["local_rotation"])
             self.set_local_scale(state["local_scale_x"], state["local_scale_y"])
 
+    def set_start_local_position(self, local_x, local_y):
+        if self.game_object.uuid in self.game_object.scene.start_states:
+            state = self.game_object.scene.start_states[self.game_object.uuid]
+            state["local_x"] = local_x
+            state["local_y"] = local_y
+
+    def set_start_local_rotation(self, local_rotation):
+        if self.game_object.uuid in self.game_object.scene.start_states:
+            state = self.game_object.scene.start_states[self.game_object.uuid]
+            state["local_rotation"] = local_rotation
+
+    def set_start_local_scale(self, local_scale_x, local_scale_y):
+        if self.game_object.uuid in self.game_object.scene.start_states:
+            state = self.game_object.scene.start_states[self.game_object.uuid]
+            state["local_scale_x"] = local_scale_x
+            state["local_scale_y"] = local_scale_y
+
     # --- Local setters ---
-    def set_local_position(self, x, y):
+    def set_local_position(self, x, y, is_start_position: bool = False):
         """
         Set the local position of the Transform relative to parent.
 
         Args:
             x (float): Local X position.
             y (float): Local Y position.
+            is_start_position (bool): Is it the start scene position
         """
-        self.local_x = x
-        self.local_y = y
+        if is_start_position:
+            self.set_start_local_position(x, y)
+        else:
+            self.local_x = x
+            self.local_y = y
 
     def get_local_position(self):
         """
@@ -75,14 +96,18 @@ class Transform(Component):
         """
         return self.local_x, self.local_y
 
-    def set_local_rotation(self, degrees):
+    def set_local_rotation(self, degrees, is_start_rotation: bool = False):
         """
         Set the local rotation of the Transform relative to parent.
 
         Args:
             degrees (float): Rotation angle in degrees.
+            is_start_rotation (bool): Is it the start scene rotation
         """
-        self.local_rotation = degrees % 360
+        if is_start_rotation:
+            self.set_start_local_rotation(degrees % 360)
+        else:
+            self.local_rotation = degrees % 360
 
     def get_local_rotation(self, radians=True):
         """
@@ -96,16 +121,22 @@ class Transform(Component):
         """
         return math.radians(self.local_rotation) if radians else self.local_rotation
 
-    def set_local_scale(self, sx, sy=None):
+    def set_local_scale(self, sx, sy=None, is_start_scale: bool = False):
         """
         Set the local scale of the Transform relative to parent.
 
         Args:
             sx (float): Scale along X axis.
             sy (float, optional): Scale along Y axis. If None, Y scale = X scale.
+            is_start_scale (bool, optional): Is it the start scene scale
         """
-        self.local_scale_x = sx
-        self.local_scale_y = sy if sy is not None else sx
+        local_scale_x = sx
+        local_scale_y = sy if sy is not None else sx
+        if is_start_scale:
+           self.set_start_local_scale(local_scale_x, local_scale_y)
+        else:
+            self.local_scale_x = local_scale_x
+            self.local_scale_y = local_scale_y
 
     def get_local_scale(self):
         """
@@ -258,6 +289,7 @@ class Transform(Component):
         return -rx, -ry
 
     def update(self, dt: float) -> None:
+        self.in_start = False
         x, y = self.get_world_position()
 
         out_of_bounds = (

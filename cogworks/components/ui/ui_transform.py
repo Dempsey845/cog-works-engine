@@ -42,8 +42,16 @@ class UITransform(Component):
         self.rect = pygame.Rect(0, 0, 0, 0)
         self.layout = None
 
-    def start(self):
+    def on_enabled(self):
         EventManager.get_instance().subscribe(self._on_event)
+
+    def on_remove(self):
+        EventManager.get_instance().unsubscribe(self._on_event)
+
+    def on_disabled(self):
+        EventManager.get_instance().unsubscribe(self._on_event)
+
+    def start(self):
         self.layout = self.game_object.get_component("UILayout")
         self.update_rect()
 
@@ -128,6 +136,3 @@ class UITransform(Component):
             self.update_rect()
             if self.layout:
                 self.layout.update_layout()
-
-    def on_destroy(self):
-        EventManager.get_instance().unsubscribe(self._on_event)

@@ -16,11 +16,18 @@ class Background(Component):
         self.scaled_image: pygame.Surface | None = None
         self.transform: Transform | None = None
 
+    def on_enabled(self):
+        EventManager.get_instance().subscribe(self._on_event)
+
+    def on_disabled(self):
+        EventManager.get_instance().unsubscribe(self._on_event)
+
+    def on_remove(self):
+        EventManager.get_instance().unsubscribe(self._on_event)
+
     def start(self):
         self.transform = self.game_object.get_component(Transform)
         self.original_image = self.game_object.get_component(Sprite).original_image
-
-        EventManager.get_instance().subscribe(self._on_event)
 
         self._scale_and_center()
 
@@ -53,7 +60,3 @@ class Background(Component):
     def _on_event(self, event):
         if event.type == pygame.VIDEORESIZE:
             self._scale_and_center()
-
-    def on_destroy(self):
-        """Unsubscribe when the component is destroyed."""
-        EventManager.get_instance().unsubscribe(self._on_event)

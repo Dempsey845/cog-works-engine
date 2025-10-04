@@ -48,7 +48,7 @@ class Scene:
 
         # Start each original game object
         for go in self.game_objects:
-            go._active = True
+            go.enable()
             go.start()
 
     def add_game_object(self, game_object: GameObject) -> None:
@@ -148,6 +148,10 @@ class Scene:
         for go in self.game_objects:
             go.reset_to_start()
 
+    def stop_scene(self):
+        for go in self.game_objects:
+            go.disable()
+
     def save_start_states(self):
         self.start_states = {}
 
@@ -223,8 +227,17 @@ class SceneManager:
         else:
             raise ValueError(f"Scene '{scene_name}' not found in SceneManager.")
 
-    def restart_active_scene(self):
+    def _restart_active_scene(self):
         self.active_scene.restart()
+
+    def change_active_scene(self, scene_name: str) -> None:
+        """Change the currently active scene by name."""
+        self._restart_active_scene()
+        self.active_scene.stop_scene()
+        self.set_active_scene(scene_name)
+        self.start_active_scene()
+        self._restart_active_scene()
+
 
     def update(self, dt: float) -> None:
         """

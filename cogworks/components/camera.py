@@ -1,5 +1,4 @@
 from cogworks.component import Component
-from cogworks.pygame_wrappers.event_manager import EventManager
 from cogworks.pygame_wrappers.window import Window
 
 
@@ -9,25 +8,6 @@ class Camera(Component):
         self.offset_x = 0
         self.offset_y = 200
         self.zoom = 1.0  # 1.0 = normal, <1.0 = zoom out, >1.0 = zoom in
-        self.surface_width, self.surface_height = Window.get_instance().get_size()
-
-
-    def on_enabled(self):
-        # Subscribe to window resize events
-        EventManager.get_instance().subscribe(self.handle_window_event)
-
-    def on_disabled(self):
-        EventManager.get_instance().unsubscribe(self.handle_window_event)
-
-    def on_remove(self) -> None:
-        EventManager.get_instance().unsubscribe(self.handle_window_event)
-
-    def handle_window_event(self, event):
-        """Update surface size on window resize."""
-        import pygame
-        if event.type == pygame.VIDEORESIZE:
-            self.surface_width = event.w
-            self.surface_height = event.h
 
     def move(self, dx, dy):
         """Move the camera by a given delta."""
@@ -48,7 +28,8 @@ class Camera(Component):
             tuple: (world_x, world_y)
         """
         # Screen positions
-        sw, sh = self.surface_width, self.surface_height
+        sw, sh = Window.get_instance().get_size()
+        print(sw, sh)
         points = {
             "center": (sw / 2, sh / 2),
             "topleft": (0, 0),
@@ -133,8 +114,9 @@ class Camera(Component):
         """
         Returns the current camera bounds in world coordinates as (left, top, right, bottom).
         """
+        w, h = Window.get_instance().get_size()
         left = self.offset_x
         top = self.offset_y
-        right = self.offset_x + self.surface_width / self.zoom
-        bottom = self.offset_y + self.surface_height / self.zoom
+        right = self.offset_x + w / self.zoom
+        bottom = self.offset_y + h/ self.zoom
         return top, bottom, left, right

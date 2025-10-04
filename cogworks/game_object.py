@@ -24,7 +24,7 @@ class GameObject:
 
         # Meta information
         self.name = name
-        self.active = True
+        self._active = True
         self.z_index = z_index
 
         # Scene
@@ -193,7 +193,7 @@ class GameObject:
         for comp in self.components:
             comp.start()
         for child in self.children:
-            child.active = True
+            child._active = True
             child.start()
         self.save_start_state()
         self.start_children = self.children.copy()
@@ -202,7 +202,7 @@ class GameObject:
         """
         Update all components and children.
         """
-        if not self.active:
+        if not self._active:
             return
         for comp in self.components:
             comp.update(dt)
@@ -214,7 +214,7 @@ class GameObject:
         Fixed timestep update for physics or deterministic logic.
         Calls fixed_update on all components that implement it, including children.
         """
-        if not self.active:
+        if not self._active:
             return
         for comp in self.components:
             comp.fixed_update(dt)
@@ -222,7 +222,7 @@ class GameObject:
             child.fixed_update(dt)
 
     def render(self, surface) -> None:
-        if not self.active:
+        if not self._active:
             return
 
         for comp in self._sorted_components:
@@ -238,7 +238,7 @@ class GameObject:
         # Helper function to decide whether to deactivate or remove
         def deactivate_or_remove(container, start_list, remove_func):
             if self in start_list:
-                self.active = False
+                self.disable()
             else:
                 remove_func(self)
 
@@ -255,9 +255,37 @@ class GameObject:
                 remove_func=self.scene.remove_game_object
             )
 
+    def enable(self):
+        """Enable the GameObject"""
+        self._active = True
+        self.on_enabled()
+
+    def disable(self):
+        """Disable the GameObject"""
+        self._active = False
+        self.on_disabled()
+
+    def on_enabled(self):
+        """
+        Called when the GameObject is enabled
+        """
+        for comp in self.components:
+            comp.on_enabled()
+        for child in self.children:
+            child.on_enabled()
+
+    def on_disabled(self):
+        """
+        Called when the GameObject is disabled
+        """
+        for comp in self.components:
+            comp.on_disabled()
+        for child in self.children:
+            child.on_disabled()
+
     # ---------------- Utilities ----------------
     def get_world_position(self):
         return self.transform.get_world_position()
 
     def __repr__(self):
-        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}' child_count={len(self.children)} active={self.active}>"
+        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}' child_count={len(self.children)} active={self._active}>"

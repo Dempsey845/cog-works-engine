@@ -47,7 +47,7 @@ class TriggerCollisionManager:
         else:  # circle
             if collider.center is None:
                 # fallback: use transform position
-                x, y = collider.transform.get_local_position()
+                x, y = collider.transform.get_world_position()
                 cx, cy = x, y
             else:
                 cx, cy = collider.center

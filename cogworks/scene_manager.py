@@ -48,7 +48,7 @@ class Scene:
 
         # Start each original game object
         for go in self.game_objects:
-            go.active = True
+            go._active = True
             go.start()
 
     def add_game_object(self, game_object: GameObject) -> None:

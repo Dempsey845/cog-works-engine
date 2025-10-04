@@ -45,7 +45,7 @@ class Sprite(Component):
         Internal: rebuild the sprite image if scale/rotation changed
         """
         sx, sy = self.transform.get_local_scale()
-        angle = -self.transform.local_rotation  # rotate counter-clockwise
+        angle = self.transform.local_rotation
 
         # Apply rotozoom (rotation + scale combined)
         avg_scale = (sx + sy) / 2 if (sx != sy) else sx

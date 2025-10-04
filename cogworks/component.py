@@ -55,6 +55,18 @@ class Component:
         """
         pass
 
+    def on_enabled(self):
+        """
+        Called when the component is enabled.
+        """
+        pass
+
+    def on_disabled(self):
+        """
+        Called when the component is disabled.
+        """
+        pass
+
     def reset_to_start(self):
         """
         Called when the scene is restarted.

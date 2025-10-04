@@ -48,7 +48,7 @@ class TriggerCollider(Component):
         self.game_object.scene.trigger_collision_manager.register(self)
 
     def update(self, dt):
-        x, y = self.transform.get_local_position()
+        x, y = self.transform.get_world_position()
 
         # Update rectangle or circle position
         if self.shape == "rect":

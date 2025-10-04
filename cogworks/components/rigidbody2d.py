@@ -60,6 +60,30 @@ class Rigidbody2D(Component):
         self.transform = self.game_object.get_component(Transform)
         self._create_body()
 
+    def on_enabled(self):
+        """Re-adds the body/shape to the physics space if not already present."""
+        if self.body and self.shape:
+            space = self.game_object.scene.physics_space
+            if self.body not in space.bodies:
+                space.add(self.body, self.shape)
+
+    def on_disabled(self):
+        """Removes the body/shape from the physics space but keeps them for later re-enable."""
+        if self.body and self.shape:
+            space = self.game_object.scene.physics_space
+            if self.body in space.bodies:
+                space.remove(self.body, self.shape)
+
+    def on_remove(self) -> None:
+        """Completely removes the body/shape from the space and clears references."""
+        if self.body and self.shape:
+            space = self.game_object.scene.physics_space
+            if self.body in space.bodies:
+                space.remove(self.body, self.shape)
+        self.body = None
+        self.shape = None
+        self.transform._rb_body = None
+
     def reset_to_start(self):
         """Resets the Rigidbody2D by reinitialising the physics body at the current transform position."""
         if not self.transform:
@@ -74,7 +98,7 @@ class Rigidbody2D(Component):
             width = max(self.width * scale_x, 1)
             height = max(self.height * scale_y, 1)
         elif self.shape_type == "circle":
-            width = height = radius = max(self.radius * max(scale_x, scale_y), 1)
+            radius = max(self.radius * max(scale_x, scale_y), 1)
         else:
             raise ValueError(f"Unknown shape_type: {self.shape_type}")
 
@@ -90,11 +114,27 @@ class Rigidbody2D(Component):
             self.body.velocity_func = self._limit_velocity
 
         self.body.position = self.transform.get_local_position()
-        self.body.angle = math.radians(self.transform.get_local_rotation())
+        self.body.angle = -math.radians(self.transform.local_rotation)
         self.transform._rb_body = self.body
 
         if self.shape_type == "box":
-            self.shape = pymunk.Poly.create_box(self.body, (width, height))
+            if self.static:
+                self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+                self.body.position = self.transform.get_local_position()
+
+                hw, hh = width / 2, height / 2
+                angle = -math.radians(self.transform.local_rotation)
+
+                # Rotate vertices around origin
+                verts = [
+                    pymunk.Vec2d(x, y).rotated(angle)
+                    for x, y in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+                ]
+
+                # Create poly relative to body
+                self.shape = pymunk.Poly(self.body, verts)
+            else:
+                self.shape = pymunk.Poly.create_box(self.body, (width, height))
         else:
             self.shape = pymunk.Circle(self.body, radius)
 
@@ -211,7 +251,7 @@ class Rigidbody2D(Component):
 
         if not self.static:
             self.transform.set_world_position(*self.body.position)
-            self.transform.set_local_rotation(math.degrees(self.body.angle))
+            self.transform.set_local_rotation(-math.degrees(self.body.angle))
 
     # ------------------------
     # Collision / Raycasting

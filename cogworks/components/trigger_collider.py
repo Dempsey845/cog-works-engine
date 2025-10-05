@@ -58,7 +58,7 @@ class TriggerCollider(Component):
             self.center = (x, y)
 
     def on_remove(self):
-        self.game_object.scene.collision_manager.unregister(self)
+        self.game_object.scene.trigger_collision_manager.unregister(self)
 
     def intersects(self, other):
         """
@@ -92,7 +92,7 @@ class TriggerCollider(Component):
         return False
 
     def render(self, surface):
-        if not self.debug:
+        if not self.debug or not self.rect:
             return
 
         camera = self.game_object.scene.camera_component

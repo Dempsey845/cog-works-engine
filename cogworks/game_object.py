@@ -159,6 +159,7 @@ class GameObject:
         if child.parent:
             child.parent.remove_child(child)
         child.parent = self
+        child.scene = self.scene
         self.children.append(child)
         child._set_scene_recursive(self.scene)  # propagate scene to child and descendants
 

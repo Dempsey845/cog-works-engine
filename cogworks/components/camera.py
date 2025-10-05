@@ -6,7 +6,7 @@ class Camera(Component):
     def __init__(self):
         super().__init__()
         self.offset_x = 0
-        self.offset_y = 200
+        self.offset_y = 0
         self.zoom = 1.0  # 1.0 = normal, <1.0 = zoom out, >1.0 = zoom in
 
     def move(self, dx, dy):
@@ -29,7 +29,6 @@ class Camera(Component):
         """
         # Screen positions
         sw, sh = Window.get_instance().get_size()
-        print(sw, sh)
         points = {
             "center": (sw / 2, sh / 2),
             "topleft": (0, 0),

@@ -33,10 +33,15 @@ class Transform(Component):
             z_index (int, optional): Render order index (higher values render on top). Defaults to 1.
         """
         super().__init__()
+        self.start_x = x
+        self.start_y = y
         self.local_x = x
         self.local_y = y
+        self.start_rotation = rotation
         self.local_rotation = rotation
+        self.start_scale_x = scale_x
         self.local_scale_x = scale_x
+        self.start_scale_y = scale_y
         self.local_scale_y = scale_y
         self.debug = debug
         self.z_index = z_index
@@ -44,48 +49,25 @@ class Transform(Component):
         self.world_bound_y = math.inf
 
     def start(self):
+        self.local_x = self.start_x
+        self.local_y = self.start_y
+        self.local_rotation = self.start_rotation
+        self.local_scale_x = self.start_scale_x
+        self.local_scale_y = self.start_scale_y
         self.world_bound_x = self.game_object.scene.engine.world_bound_x
         self.world_bound_y = self.game_object.scene.engine.world_bound_y
 
-    def reset_to_start(self):
-        if self.game_object.uuid in self.game_object.scene.start_states:
-            state = self.game_object.scene.start_states[self.game_object.uuid]
-            self.set_local_position(state["local_x"], state["local_y"])
-            self.set_local_rotation(state["local_rotation"])
-            self.set_local_scale(state["local_scale_x"], state["local_scale_y"])
-
-    def set_start_local_position(self, local_x, local_y):
-        if self.game_object.uuid in self.game_object.scene.start_states:
-            state = self.game_object.scene.start_states[self.game_object.uuid]
-            state["local_x"] = local_x
-            state["local_y"] = local_y
-
-    def set_start_local_rotation(self, local_rotation):
-        if self.game_object.uuid in self.game_object.scene.start_states:
-            state = self.game_object.scene.start_states[self.game_object.uuid]
-            state["local_rotation"] = local_rotation
-
-    def set_start_local_scale(self, local_scale_x, local_scale_y):
-        if self.game_object.uuid in self.game_object.scene.start_states:
-            state = self.game_object.scene.start_states[self.game_object.uuid]
-            state["local_scale_x"] = local_scale_x
-            state["local_scale_y"] = local_scale_y
-
     # --- Local setters ---
-    def set_local_position(self, x, y, is_start_position: bool = False):
+    def set_local_position(self, x, y):
         """
         Set the local position of the Transform relative to parent.
 
         Args:
             x (float): Local X position.
             y (float): Local Y position.
-            is_start_position (bool): Is it the start scene position
         """
-        if is_start_position:
-            self.set_start_local_position(x, y)
-        else:
-            self.local_x = x
-            self.local_y = y
+        self.local_x = x
+        self.local_y = y
 
     def get_local_position(self):
         """
@@ -96,18 +78,14 @@ class Transform(Component):
         """
         return self.local_x, self.local_y
 
-    def set_local_rotation(self, degrees, is_start_rotation: bool = False):
+    def set_local_rotation(self, degrees):
         """
         Set the local rotation of the Transform relative to parent.
 
         Args:
             degrees (float): Rotation angle in degrees.
-            is_start_rotation (bool): Is it the start scene rotation
         """
-        if is_start_rotation:
-            self.set_start_local_rotation(degrees % 360)
-        else:
-            self.local_rotation = degrees % 360
+        self.local_rotation = degrees % 360
 
     def get_local_rotation(self, radians=True):
         """
@@ -121,22 +99,18 @@ class Transform(Component):
         """
         return math.radians(self.local_rotation) if radians else self.local_rotation
 
-    def set_local_scale(self, sx, sy=None, is_start_scale: bool = False):
+    def set_local_scale(self, sx, sy=None):
         """
         Set the local scale of the Transform relative to parent.
 
         Args:
             sx (float): Scale along X axis.
             sy (float, optional): Scale along Y axis. If None, Y scale = X scale.
-            is_start_scale (bool, optional): Is it the start scene scale
         """
         local_scale_x = sx
         local_scale_y = sy if sy is not None else sx
-        if is_start_scale:
-           self.set_start_local_scale(local_scale_x, local_scale_y)
-        else:
-            self.local_scale_x = local_scale_x
-            self.local_scale_y = local_scale_y
+        self.local_scale_x = local_scale_x
+        self.local_scale_y = local_scale_y
 
     def get_local_scale(self):
         """

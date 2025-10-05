@@ -11,6 +11,8 @@ class Component:
         """
         self.game_object = None  # Set when attached to a GameObject
         self.active = True
+        self.is_runtime = False
+        self.has_started = False
 
     def start(self) -> None:
         """

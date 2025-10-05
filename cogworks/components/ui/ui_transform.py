@@ -7,48 +7,36 @@ class UITransform(Component):
     """
     UITransform defines the position, size, and anchor of a UI element.
 
-    Features:
-        - Supports absolute or relative positioning and sizing.
-        - Anchors elements to corners or center of the screen.
-        - Updates automatically when the window is resized.
-        - Integrates with `UILayout` to allow parent-managed positioning.
-        - Provides setters for position, size, and anchor.
+    Now takes camera position and zoom into account, so UI elements
+    can follow world-space movement or adjust correctly to zoom.
     """
 
-    def __init__(self, x=0, y=0, width=1, height=1, anchor="topleft", relative=True):
+    def __init__(self, x=0, y=0, width=1, height=1, anchor="topleft", relative=True, world_space=False, debug=False):
         """
-        Initialise a UITransform component.
-
         Args:
-            x (int | float, optional): X position of the element. If `relative` is True,
-                                       treated as a fraction of screen width (default: 0).
-            y (int | float, optional): Y position of the element. If `relative` is True,
-                                       treated as a fraction of screen height (default: 0).
-            width (int | float, optional): Width of the element. If `relative` is True,
-                                           treated as a fraction of screen width (default: 1).
-            height (int | float, optional): Height of the element. If `relative` is True,
-                                            treated as a fraction of screen height (default: 1).
-            anchor (str, optional): Alignment of the rect relative to (x, y).
-                                    Options: "topleft", "topright", "bottomleft", "bottomright", "center".
-                                    (default: "topleft")
-            relative (bool, optional): If True, interpret x, y, width, height as relative
-                                       fractions of screen size. If False, interpret as pixels. (default: True)
+            x, y (float | int): Position (fractional or absolute).
+            width, height (float | int): Size (fractional or absolute).
+            anchor (str): Position anchor: 'topleft', 'center', etc.
+            relative (bool): Whether to treat coordinates as fractions of screen size.
+            world_space (bool): If True, interpret x/y as world coordinates affected by camera.
         """
         super().__init__()
         self.anchor = anchor
         self.relative = relative
+        self.world_space = world_space  # <— NEW: toggles camera transform
         self._x, self._y = x, y
         self._width, self._height = width, height
         self.rect = pygame.Rect(0, 0, 0, 0)
         self.layout = None
+        self.debug = debug
 
     def on_enabled(self):
         EventManager.get_instance().subscribe(self._on_event)
 
-    def on_remove(self):
+    def on_disabled(self):
         EventManager.get_instance().unsubscribe(self._on_event)
 
-    def on_disabled(self):
+    def on_remove(self):
         EventManager.get_instance().unsubscribe(self._on_event)
 
     def start(self):
@@ -56,30 +44,44 @@ class UITransform(Component):
         self.update_rect()
 
     def update_rect(self):
-        parent_go = getattr(self.game_object, "parent", None)
-        parent_transform = None
-        if parent_go:
-            parent_transform = parent_go.get_component("UITransform")
+        parent_go = self.game_object.parent
+        parent_transform = parent_go.get_component("UITransform") if parent_go else None
 
         if parent_go and parent_go.has_component("UILayout"):
-            # Layout manages this child's rect
             return
 
         screen_width, screen_height = pygame.display.get_window_size()
+        camera = self.game_object.scene.camera_component
+
+        # --- Determine Base Dimensions ---
         if parent_transform and self.relative:
             width = int(self._width * parent_transform.rect.width)
             height = int(self._height * parent_transform.rect.height)
-            x = int(self._x * parent_transform.rect.width)
-            y = int(self._y * parent_transform.rect.height)
         elif self.relative:
             width = int(self._width * screen_width)
             height = int(self._height * screen_height)
+        else:
+            width, height = int(self._width), int(self._height)
+
+        # --- Determine Base Position ---
+        if parent_transform and self.relative:
+            # Start at parent's anchor-corrected origin
+            px, py = self._get_parent_anchor_origin(parent_transform)
+            x = px + int(self._x * parent_transform.rect.width)
+            y = py + int(self._y * parent_transform.rect.height)
+        elif self.relative:
             x = int(self._x * screen_width)
             y = int(self._y * screen_height)
         else:
-            width, height, x, y = int(self._width), int(self._height), int(self._x), int(self._y)
+            x, y = int(self._x), int(self._y)
 
-        # Apply anchor first (relative to its own local rect)
+        # --- Apply Camera if World-Space ---
+        if self.world_space and camera:
+            x, y = camera.world_to_screen(x, y)
+            width = camera.scale_length(width)
+            height = camera.scale_length(height)
+
+        # --- Apply This Element's Own Anchor ---
         if self.anchor == "center":
             x -= width // 2
             y -= height // 2
@@ -91,43 +93,33 @@ class UITransform(Component):
             x -= width
             y -= height
 
-        # Offset by parent global position
-        if parent_transform:
-            x += parent_transform.rect.x
-            y += parent_transform.rect.y
-
         self.rect = pygame.Rect(x, y, width, height)
 
-    def set_position(self, x, y):
-        """
-        Set the element's position and update its rect.
+    def _get_parent_anchor_origin(self, parent_transform):
+        rect = parent_transform.rect
+        anchor = parent_transform.anchor
+        if anchor == "topleft":
+            return rect.left, rect.top
+        elif anchor == "topright":
+            return rect.right, rect.top
+        elif anchor == "bottomleft":
+            return rect.left, rect.bottom
+        elif anchor == "bottomright":
+            return rect.right, rect.bottom
+        elif anchor == "center":
+            return rect.centerx, rect.centery
+        else:
+            return rect.topleft
 
-        Args:
-            x (int | float): X position (absolute pixels or relative fraction).
-            y (int | float): Y position (absolute pixels or relative fraction).
-        """
+    def set_position(self, x, y):
         self._x, self._y = x, y
         self.update_rect()
 
     def set_size(self, width, height):
-        """
-        Set the element's size and update its rect.
-
-        Args:
-            width (int | float): Width (absolute pixels or relative fraction).
-            height (int | float): Height (absolute pixels or relative fraction).
-        """
         self._width, self._height = width, height
         self.update_rect()
 
     def set_anchor(self, anchor):
-        """
-        Set the element's anchor and update its rect.
-
-        Args:
-            anchor (str): Alignment of the rect relative to (x, y).
-                          Options: "topleft", "topright", "bottomleft", "bottomright", "center".
-        """
         self.anchor = anchor
         self.update_rect()
 
@@ -136,3 +128,12 @@ class UITransform(Component):
             self.update_rect()
             if self.layout:
                 self.layout.update_layout()
+
+    def render(self, surface):
+        if not self.debug:
+            return
+        colour = (0, 255, 0) if not self.game_object.parent else (255, 255, 0)
+        pygame.draw.rect(surface, colour, self.rect, 1)
+
+        # Small anchor marker
+        pygame.draw.circle(surface, (255, 0, 0), self.rect.topleft, 3)

@@ -44,10 +44,12 @@ class TriggerCollider(Component):
             if sprite:
                 self.radius = max(sprite.image.get_width(), sprite.image.get_height()) // 2
 
+        self.update_shape()
+
         # Register with collision manager
         self.game_object.scene.trigger_collision_manager.register(self)
 
-    def update(self, dt):
+    def update_shape(self):
         x, y = self.transform.get_world_position()
 
         # Update rectangle or circle position
@@ -56,6 +58,10 @@ class TriggerCollider(Component):
             self.center = self.rect.center
         elif self.shape == "circle":
             self.center = (x, y)
+
+    def update(self, dt):
+        self.update_shape()
+
 
     def on_remove(self):
         self.game_object.scene.trigger_collision_manager.unregister(self)
@@ -92,7 +98,7 @@ class TriggerCollider(Component):
         return False
 
     def render(self, surface):
-        if not self.debug or not self.rect:
+        if not self.debug:
             return
 
         camera = self.game_object.scene.camera_component
@@ -100,11 +106,16 @@ class TriggerCollider(Component):
         if self.shape == "rect":
             # Convert world coordinates to screen coordinates
             screen_x, screen_y = camera.world_to_screen(self.rect.x, self.rect.y)
-            screen_rect = pygame.Rect(screen_x, screen_y, self.rect.width, self.rect.height)
+            # Scale width and height by zoom
+            screen_width = self.rect.width * camera.zoom
+            screen_height = self.rect.height * camera.zoom
+            screen_rect = pygame.Rect(screen_x, screen_y, screen_width, screen_height)
             pygame.draw.rect(surface, (255, 0, 0), screen_rect, 1)
         else:
             screen_center = camera.world_to_screen(*self.center)
-            pygame.draw.circle(surface, (255, 0, 0), (int(screen_center[0]), int(screen_center[1])), self.radius, 1)
+            # Scale radius by zoom
+            screen_radius = int(self.radius * camera.zoom)
+            pygame.draw.circle(surface, (255, 0, 0), (int(screen_center[0]), int(screen_center[1])), screen_radius, 1)
 
     @staticmethod
     def _circle_rect_intersects(circle, rect_collider):

@@ -18,7 +18,8 @@ class UIFillImage(UIImage):
     def __init__(self, image_path, load_engine=False, fill_amount=1.0,
                  fill_direction='horizontal', fill_origin=None, fill_speed=2.0):
         super().__init__(image_path, load_engine)
-        self.fill_amount = max(0.0, min(fill_amount, 1.0))
+        self.start_fill_amount = max(0.0, min(fill_amount, 1.0))
+        self.fill_amount = self.start_fill_amount
         self.target_fill = self.fill_amount
         self.fill_direction = fill_direction.lower()
         if self.fill_direction not in ('horizontal', 'vertical'):
@@ -32,6 +33,9 @@ class UIFillImage(UIImage):
         self._validate_origin()
 
         self.fill_speed = fill_speed  # Fill units per second
+
+    def start(self):
+        self.fill_amount = self.start_fill_amount
 
     def _validate_origin(self):
         if self.fill_direction == 'horizontal' and self.fill_origin not in ('left', 'right'):

@@ -6,7 +6,7 @@ from cogworks.utils.asset_loader import load_user_image
 
 
 class Sprite(Component):
-    def __init__(self, image_path: str):
+    def __init__(self, image_path: str, offset_x: float = 0, offset_y: float = 0, scale_factor: float = 1.0):
         """
         Sprite component to render an image associated with a GameObject.
 
@@ -22,6 +22,9 @@ class Sprite(Component):
         self._last_transform_state = None  # Cache to detect Transform changes
         self.camera = None
         self._scaled_image_cache = {}  # Cache for scaled images (scale, zoom) -> pygame.Surface
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.scale_factor = scale_factor
 
     def start(self):
         self.transform = self.game_object.get_component(Transform)
@@ -47,17 +50,18 @@ class Sprite(Component):
         sx, sy = self.transform.get_local_scale()
         angle = self.transform.local_rotation
 
-        # Apply rotozoom (rotation + scale combined)
+        sx *= self.scale_factor
+        sy *= self.scale_factor
+
         avg_scale = (sx + sy) / 2 if (sx != sy) else sx
         self.image = pygame.transform.rotozoom(self.original_image, angle, avg_scale)
 
-        # Update rect to match transformed image and center at Transform position
-        self.rect = self.image.get_rect(center=(self.transform.local_x, self.transform.local_y))
+        # Apply offset, scaled by scale_factor
+        final_x = self.transform.local_x + self.offset_x * self.scale_factor
+        final_y = self.transform.local_y + self.offset_y * self.scale_factor
 
-        # Store the state so we don't re-transform unnecessarily
+        self.rect = self.image.get_rect(center=(final_x, final_y))
         self._last_transform_state = (sx, sy, self.transform.local_rotation)
-
-        # Clear scaled image cache since base image changed
         self._scaled_image_cache.clear()
 
     def update(self, dt: float):
@@ -73,36 +77,30 @@ class Sprite(Component):
             self._apply_transform()
 
     def render(self, surface):
-        """
-        Draw the sprite onto the given surface, considering camera zoom/position if available.
-        Uses a cache to store previously scaled images for performance.
-        """
         if not self.transform or not self.image:
             return
 
+        # Apply offset and scale_factor
         x, y = self.transform.get_world_position()
+        x += self.offset_x * self.scale_factor
+        y += self.offset_y * self.scale_factor
+
         img = self.image
         w, h = img.get_size()
 
-        # Determine current zoom
         zoom = self.camera.zoom if self.camera else 1.0
-
-        # Check if we already cached this scale+zoom
-        cache_key = (w, h, zoom)
+        cache_key = (w, h, zoom, self.scale_factor)
         if cache_key in self._scaled_image_cache:
             img_scaled = self._scaled_image_cache[cache_key]
             w_scaled, h_scaled = img_scaled.get_size()
         else:
-            # Apply camera zoom
             w_scaled, h_scaled = int(w * zoom), int(h * zoom)
             img_scaled = pygame.transform.scale(img, (w_scaled, h_scaled))
             self._scaled_image_cache[cache_key] = img_scaled
 
-        # Skip rendering if outside camera view
         if self.camera and not self.camera.is_visible(x, y, w_scaled, h_scaled):
             return
 
-        # Calculate screen position and draw
         if self.camera:
             screen_x, screen_y = self.camera.world_to_screen(x, y)
             surface.blit(img_scaled, (screen_x - w_scaled // 2, screen_y - h_scaled // 2))

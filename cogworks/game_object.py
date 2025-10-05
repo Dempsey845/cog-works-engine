@@ -12,7 +12,7 @@ class GameObject:
 
     _id_counter = 0  # class-level counter for incremental IDs
 
-    def __init__(self, name: str = "GameObject", z_index: int = 0):
+    def __init__(self, name: str = "GameObject", z_index: int = 0, x: float = 0, y: float = 0, scale_x: float = 1, scale_y: float = 1, rotation: float = 0):
         """
         Initialise a new GameObject with a unique identifier.
         Automatically adds a Transform component.
@@ -29,20 +29,20 @@ class GameObject:
 
         # Scene
         self.scene = None
-        self.start_state = None
 
         # Component storage
-        self.components: list = []
+        self.initial_components: list = []
         self._sorted_components: list = []
+        self.runtime_components: list = []
 
         # Add default Transform component
-        self.transform = Transform()
+        self.transform = Transform(x=x, y=y, scale_x=scale_x, scale_y=scale_y, rotation=rotation)
         self.add_component(self.transform)
 
         # ---------------- Hierarchy ----------------
         self.parent: "GameObject | None" = None  # Parent GameObject
-        self.children: list["GameObject"] = []   # List of child GameObjects
-        self.start_children: list["GameObject"] = []
+        self.initial_children: list["GameObject"] = []
+        self.runtime_children: list["GameObject"] = []
 
     # ---------------- Component Management ----------------
     def add_component(self, component) -> None:
@@ -66,7 +66,12 @@ class GameObject:
             raise ValueError("Cannot add Rigidbody2D to a child GameObject")
 
         component.game_object = self
-        self.components.append(component)
+        target_list = self.runtime_components if self.scene and self.scene.has_started else self.initial_components
+
+        target_list.append(component)
+        if self.scene and self.scene.has_started:
+            component.start()
+            component.has_started = True
 
         self._sort_components()
 
@@ -75,15 +80,17 @@ class GameObject:
         Remove the first component of the given type from the GameObject.
         """
         # Do not allow removing Transform
-        if component_type is Transform:
+        if component_type is Transform and self in getattr(self.scene, "initial_components", []):
             print("Cannot remove Transform component from GameObject.")
             return False
 
-        for i, comp in enumerate(self.components):
+        components = self.runtime_components if self.scene and self.scene.has_started else self.initial_components
+
+        for i, comp in enumerate(components):
             if isinstance(comp, component_type):
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
-                self.components.pop(i)
+                components.pop(i)
                 self._sort_components()
                 return True
         return False
@@ -93,11 +100,14 @@ class GameObject:
         Retrieve the first component of a given type.
         Accepts either the class type or a string with the class name.
         """
-        for comp in self.components:
-            if isinstance(component_type, str):
+        # Cache concatenation to avoid repeated list creation
+        components = self._all_components
+        if isinstance(component_type, str):
+            for comp in components:
                 if comp.__class__.__name__ == component_type:
                     return comp
-            else:
+        else:
+            for comp in components:
                 if isinstance(comp, component_type):
                     return comp
         return None
@@ -109,45 +119,21 @@ class GameObject:
         """
         return self.get_component(component) is not None
 
-    def save_start_state(self):
-        # Store a deep copy of the component states
-        self.start_state = {
-            "components": [
-                {attr: getattr(c, attr) for attr in dir(c) if not attr.startswith("_")}
-                for c in self.components
-            ],
-            "children": [child.save_start_state() for child in self.children]
-        }
-        return self.start_state
-
-    def reset_to_start(self):
-        if self.start_state is None:
-            return
-
-        # First reset all Transform components
-        for comp, state in zip(self.components, self.start_state["components"]):
-            if comp.__class__.__name__ == "Transform":
-                for attr, value in state.items():
-                    setattr(comp, attr, value)
-                comp.reset_to_start()
-
-        # Then reset all other components
-        for comp, state in zip(self.components, self.start_state["components"]):
-            if comp.__class__.__name__ != "Transform":
-                for attr, value in state.items():
-                    setattr(comp, attr, value)
-                comp.reset_to_start()
-
-        # Finally, reset children
-        for child, child_state in zip(self.children, self.start_state["children"]):
-            child.reset_to_start()
-
     def _sort_components(self):
         """Maintain a sorted list of components by z_index."""
         self._sorted_components = sorted(
-            self.components,
+            self._all_components,
             key=lambda c: getattr(c, "z_index", 0)
         )
+
+    @property
+    def _all_components(self):
+        """Cache for faster access instead of concatenating repeatedly"""
+        return self.initial_components + self.runtime_components
+
+    @property
+    def components(self):
+        return self._all_components
 
     # ---------------- Hierarchy Management ----------------
     def add_child(self, child: "GameObject") -> None:
@@ -160,25 +146,29 @@ class GameObject:
             child.parent.remove_child(child)
         child.parent = self
         child.scene = self.scene
-        self.children.append(child)
-        child._set_scene_recursive(self.scene)  # propagate scene to child and descendants
 
-    def _set_scene_recursive(self, scene) -> None:
-        """
-        Set the scene for this GameObject and all its children recursively.
-        """
+        target_list = self.runtime_children if self.scene and self.scene.has_started else self.initial_children
+        target_list.append(child)
+
+        if self.scene:
+            child._set_scene_recursive(self.scene)  # propagate scene to child and descendants
+
+        if self.scene and self.scene.has_started:
+            child.start()
+
+    def _set_scene_recursive(self, scene):
         self.scene = scene
-        for child in self.children:
+        for child in self._all_children:
             child._set_scene_recursive(scene)
 
     def remove_child(self, child: "GameObject") -> None:
         """
         Remove a child GameObject from this GameObject and clear its scene.
         """
-        if child in self.children:
-            self.children.remove(child)
+        target_list = self.runtime_children if self.scene and self.scene.has_started else self.initial_children
+        if child in target_list:
+            target_list.remove(child)
             child.parent = None
-            child._set_scene_recursive(None)  # remove scene from child and its descendants
 
     def get_children(self) -> list["GameObject"]:
         """
@@ -186,19 +176,28 @@ class GameObject:
         """
         return self.children
 
+    @property
+    def _all_children(self):
+        """Cache for faster access instead of concatenating repeatedly"""
+        return self.initial_children + self.runtime_children
+
+    @property
+    def children(self):
+        return self._all_children
+
     # ---------------- Lifecycle ----------------
     def start(self) -> None:
         """
         Call start() on all components and children.
         """
-        for comp in self.components:
-            comp.on_enabled()
-            comp.start()
-        for child in self.children:
-            child._active = True
+        self._sort_components()
+        for comp in self.initial_components:
+            if not comp.has_started:
+                comp.start()
+                comp.has_started = True
+        for child in self.initial_children:
+            child.enable()
             child.start()
-        self.save_start_state()
-        self.start_children = self.children.copy()
 
     def update(self, dt: float) -> None:
         """
@@ -206,9 +205,14 @@ class GameObject:
         """
         if not self._active:
             return
-        for comp in self.components:
-            comp.update(dt)
-        for child in self.children:
+
+        components = self._all_components
+        children = self._all_children
+
+        for comp in components:
+            if comp.has_started:
+                comp.update(dt)
+        for child in children:
             child.update(dt)
 
     def fixed_update(self, dt: float) -> None:
@@ -218,21 +222,40 @@ class GameObject:
         """
         if not self._active:
             return
-        for comp in self.components:
-            comp.fixed_update(dt)
-        for child in self.children:
+
+        components = self._all_components
+        children = self._all_children
+
+        for comp in components:
+            if comp.has_started:
+                comp.fixed_update(dt)
+        for child in children:
             child.fixed_update(dt)
 
     def render(self, surface) -> None:
         if not self._active:
             return
 
-        for comp in self._sorted_components:
-            if hasattr(comp, "render"):
-                comp.render(surface)
+        sorted_components = self._sorted_components
+        children = self._all_children
 
-        for child in self.children:
+        for comp in sorted_components:
+            comp.render(surface)
+
+        for child in children:
             child.render(surface)
+
+    def cleanup(self) -> None:
+        for comp in list(self.runtime_components):
+            self.remove_component(type(comp))
+        for child in list(self.runtime_children):
+            self.remove_child(child)
+            child.cleanup()
+        for comp in self.initial_components:
+            comp.has_started = False
+        self.runtime_components = []
+        self.runtime_children = []
+        self._sort_components()
 
     def destroy(self):
         """Remove the GameObject from its parent or scene, or deactivate if it's a starting object."""
@@ -247,13 +270,13 @@ class GameObject:
         if self.parent:
             deactivate_or_remove(
                 container=self.parent,
-                start_list=self.parent.start_children,
+                start_list=self.parent.initial_children,
                 remove_func=self.parent.remove_child
             )
         else:
             deactivate_or_remove(
                 container=self.scene,
-                start_list=self.scene.start_game_objects,
+                start_list=getattr(self.scene, "initial_objects", []),
                 remove_func=self.scene.remove_game_object
             )
 
@@ -271,18 +294,19 @@ class GameObject:
         """
         Called when the GameObject is enabled
         """
-        for comp in self.components:
+        for comp in self._all_components:
             comp.on_enabled()
-        for child in self.children:
+        for child in self._all_children:
             child.on_enabled()
 
     def on_disabled(self):
         """
         Called when the GameObject is disabled
         """
-        for comp in self.components:
+        for comp in self._all_components:
             comp.on_disabled()
-        for child in self.children:
+            comp.has_started = False
+        for child in self._all_children:
             child.on_disabled()
 
     # ---------------- Utilities ----------------
@@ -290,4 +314,4 @@ class GameObject:
         return self.transform.get_world_position()
 
     def __repr__(self):
-        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}' child_count={len(self.children)} active={self._active}>"
+        return f"<GameObject id={self.id}, uuid={self.uuid}, name='{self.name}' child_count={len(self._all_children)} active={self._active}>"

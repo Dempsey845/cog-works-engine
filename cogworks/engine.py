@@ -31,6 +31,8 @@ class Engine:
         self.world_bound_x = world_bound_x
         self.world_bound_y = world_bound_y
 
+        self._next_frame_queue = []  # Queue of functions to run next frame
+
         # Scene manager
         self.scene_manager = SceneManager()
 
@@ -45,17 +47,26 @@ class Engine:
     # ---------------- Scene Management ---------------- #
 
     def set_active_scene(self, scene_name: str) -> None:
-        """Change the currently active scene by name."""
-        if self.scene_manager.active_scene is None:
-            self.scene_manager.set_active_scene(scene_name)
-        else:
-            self.scene_manager.change_active_scene(scene_name)
+        """Change the currently active scene by name, deferred until next frame."""
+
+        def change_scene():
+            if self.scene_manager.active_scene is None:
+                self.scene_manager.set_active_scene(scene_name)
+            else:
+                self.scene_manager.change_active_scene(scene_name)
+
+        # Schedule the scene change for the next frame
+        self.schedule_next_frame(change_scene)
 
     def create_scene(self, scene_name: str, gravity=(0, 900)) -> Scene:
         """Create a new scene and add it to scene manager."""
         new_scene = Scene(scene_name, gravity)
         self.scene_manager.add_scene(new_scene, self)
         return new_scene
+
+    def restart_active_scene(self):
+        if self.scene_manager.active_scene:
+            self.scene_manager.active_scene.restart()
 
     # ---------------- Event Handling ---------------- #
 
@@ -65,6 +76,13 @@ class Engine:
             self.quit()
 
     # ---------------- Engine Loop ---------------- #
+
+    def schedule_next_frame(self, callback):
+        """
+        Schedule a function to run at the start of the next frame.
+        Useful for deferred actions like scene changes.
+        """
+        self._next_frame_queue.append(callback)
 
     def render(self):
         """
@@ -91,13 +109,15 @@ class Engine:
         fixed_dt = 1 / 60.0  # 60 FPS physics step
         accumulator = 0.0
 
-        for scene in self.scene_manager.scenes.values():
-            scene.save_start_states()
-
         # Start the active scene
         self.scene_manager.start_active_scene()
 
         while self.running:
+            # Execute scheduled callbacks from the previous frame
+            for callback in self._next_frame_queue:
+                callback()
+            self._next_frame_queue.clear()
+
             # Get frame time in seconds, clamp huge spikes
             frame_time = self.clock.tick(self.fps) / 1000.0
             frame_time = min(frame_time, 0.25)  # cap max 250ms

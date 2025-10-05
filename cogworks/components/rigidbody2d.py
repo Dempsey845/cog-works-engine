@@ -60,13 +60,6 @@ class Rigidbody2D(Component):
         self.transform = self.game_object.get_component(Transform)
         self._create_body()
 
-    def on_enabled(self):
-        """Re-adds the body/shape to the physics space if not already present."""
-        if self.body and self.shape:
-            space = self.game_object.scene.physics_space
-            if self.body not in space.bodies:
-                space.add(self.body, self.shape)
-
     def on_disabled(self):
         """Removes the body/shape from the physics space but keeps them for later re-enable."""
         if self.body and self.shape:
@@ -83,12 +76,6 @@ class Rigidbody2D(Component):
         self.body = None
         self.shape = None
         self.transform._rb_body = None
-
-    def reset_to_start(self):
-        """Resets the Rigidbody2D by reinitialising the physics body at the current transform position."""
-        if not self.transform:
-            self.transform = self.game_object.get_component(Transform)
-        self._create_body()
 
     def _create_body(self):
         """Internal method to create the pymunk physics body and collider based on the component settings."""

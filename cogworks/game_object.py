@@ -91,6 +91,7 @@ class GameObject:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
                 components.pop(i)
+                del comp
                 self._sort_components()
                 return True
         return False

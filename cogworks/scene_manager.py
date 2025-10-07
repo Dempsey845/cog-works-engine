@@ -116,6 +116,7 @@ class Scene:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
             self.runtime_objects.remove(game_object)
+            del game_object
             self._sort_objects()
 
     def update(self, dt: float) -> None:

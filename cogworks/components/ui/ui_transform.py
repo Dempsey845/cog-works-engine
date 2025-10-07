@@ -23,11 +23,10 @@ class UITransform(Component):
         super().__init__()
         self.anchor = anchor
         self.relative = relative
-        self.world_space = world_space  # <— NEW: toggles camera transform
+        self.world_space = world_space
         self._x, self._y = x, y
         self._width, self._height = width, height
         self.rect = pygame.Rect(0, 0, 0, 0)
-        self.layout = None
         self.debug = debug
 
     def on_enabled(self):
@@ -40,7 +39,6 @@ class UITransform(Component):
         EventManager.get_instance().unsubscribe(self._on_event)
 
     def start(self):
-        self.layout = self.game_object.get_component("UILayout")
         self.update_rect()
 
     def update_rect(self):
@@ -126,8 +124,9 @@ class UITransform(Component):
     def _on_event(self, event):
         if event.type == pygame.VIDEORESIZE:
             self.update_rect()
-            if self.layout:
-                self.layout.update_layout()
+            layout = self.game_object.get_component("UILayout")
+            if layout:
+                layout.update_layout()
 
     def render(self, surface):
         if not self.debug:

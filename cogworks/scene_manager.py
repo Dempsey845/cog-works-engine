@@ -71,6 +71,9 @@ class Scene:
             go.cleanup()
             go.disable()
 
+        # Clear collision manager
+        self.trigger_collision_manager.clear()
+
         self._sort_objects()  # refresh sorted_objects
 
     def restart(self):
@@ -116,7 +119,14 @@ class Scene:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
             self.runtime_objects.remove(game_object)
+            del game_object
             self._sort_objects()
+
+    def get_all_components_of_type(self, component_type):
+        components = []
+        for go in self.sorted_objects:
+            components = components + go.get_all_components_of_type(component_type)
+        return components
 
     def update(self, dt: float) -> None:
         """

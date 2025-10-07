@@ -120,3 +120,7 @@ class TriggerCollisionManager:
             if hasattr(comp, event_name):
                 getattr(comp, event_name)(other)
 
+    def clear(self):
+        """Completely clear all registered colliders and reset the spatial grid."""
+        self.colliders.clear()
+        self.spatial_grid.clear()

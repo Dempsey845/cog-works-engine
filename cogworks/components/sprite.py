@@ -6,7 +6,14 @@ from cogworks.utils.asset_loader import load_user_image
 
 
 class Sprite(Component):
-    def __init__(self, image_path: str, offset_x: float = 0, offset_y: float = 0, scale_factor: float = 1.0):
+    def __init__(
+        self,
+        image_path: str,
+        offset_x: float = 0,
+        offset_y: float = 0,
+        scale_factor: float = 1.0,
+        alpha: int = 255
+    ):
         """
         Sprite component to render an image associated with a GameObject.
 
@@ -15,7 +22,7 @@ class Sprite(Component):
         """
         super().__init__()
         self.image_path = image_path
-        self.original_image = load_user_image(image_path)
+        self.original_image = load_user_image(image_path).convert_alpha()
         self.image = self.original_image  # Current transformed image
         self.rect = self.image.get_rect()  # Rect for positioning and collision
         self.transform: Transform = None
@@ -25,6 +32,7 @@ class Sprite(Component):
         self.offset_x = offset_x
         self.offset_y = offset_y
         self.scale_factor = scale_factor
+        self.alpha = alpha  # Store alpha value
 
     def start(self):
         self.transform = self.game_object.get_component(Transform)
@@ -55,6 +63,9 @@ class Sprite(Component):
 
         avg_scale = (sx + sy) / 2 if (sx != sy) else sx
         self.image = pygame.transform.rotozoom(self.original_image, angle, avg_scale)
+
+        # Apply alpha
+        self.image.set_alpha(self.alpha)
 
         # Apply offset, scaled by scale_factor
         final_x = self.transform.local_x + self.offset_x * self.scale_factor
@@ -89,16 +100,17 @@ class Sprite(Component):
         w, h = img.get_size()
 
         zoom = self.camera.zoom if self.camera else 1.0
-        cache_key = (w, h, zoom, self.scale_factor)
+        cache_key = (w, h, zoom, self.scale_factor, self.alpha)  # include alpha in cache key
         if cache_key in self._scaled_image_cache:
             img_scaled = self._scaled_image_cache[cache_key]
             w_scaled, h_scaled = img_scaled.get_size()
         else:
             w_scaled, h_scaled = int(w * zoom), int(h * zoom)
             img_scaled = pygame.transform.scale(img, (w_scaled, h_scaled))
+            img_scaled.set_alpha(self.alpha)  # ensure scaled image keeps alpha
             self._scaled_image_cache[cache_key] = img_scaled
 
-        if self.camera and not self.camera.is_visible(x, y, w_scaled, h_scaled):
+        if self.camera and not self.camera.is_visible(x=x, y=y, width=w_scaled, height=h_scaled):
             return
 
         if self.camera:
@@ -116,8 +128,20 @@ class Sprite(Component):
             new_image_path (str): Path to the new image file.
         """
         self.image_path = new_image_path
-        self.original_image = load_user_image(new_image_path)
+        self.original_image = load_user_image(new_image_path).convert_alpha()
         self._apply_transform()  # Immediately apply to match current transform
+
+    def set_alpha(self, alpha: int):
+        """
+        Set sprite transparency at runtime.
+
+        Args:
+            alpha (int): 0 = fully transparent, 255 = fully opaque
+        """
+        self.alpha = max(0, min(255, alpha))
+        if self.image:
+            self.image.set_alpha(self.alpha)
+        self._scaled_image_cache.clear()
 
     def get_width(self, transform: 'Transform' = None) -> float:
         """
@@ -136,15 +160,6 @@ class Sprite(Component):
         scale_x = self._get_scale(transform, 'x')
         return self.image.get_width() * scale_x
 
-    def get_image_width(self) -> int:
-        """
-        Returns the unscaled width of the sprite image.
-
-        Returns:
-            int: The width of the image in pixels.
-        """
-        return self.image.get_width()
-
     def get_height(self, transform: 'Transform' = None) -> float:
         """
         Returns the height of the sprite, scaled by the provided transform or the sprite's own transform.
@@ -158,16 +173,6 @@ class Sprite(Component):
 
         Returns:
             float: The scaled height of the sprite image.
-        """
-        scale_y = self._get_scale(transform, 'y')
-        return self.image.get_height() * scale_y
-
-    def get_image_height(self) -> int:
-        """
-        Returns the unscaled height of the sprite image.
-
-        Returns:
-            int: The height of the image in pixels.
         """
         return self.image.get_height()
 

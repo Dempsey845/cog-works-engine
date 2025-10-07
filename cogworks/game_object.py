@@ -91,6 +91,7 @@ class GameObject:
                 if hasattr(comp, "on_remove"):
                     comp.on_remove()
                 components.pop(i)
+                del comp
                 self._sort_components()
                 return True
         return False
@@ -308,6 +309,15 @@ class GameObject:
             comp.has_started = False
         for child in self._all_children:
             child.on_disabled()
+
+    def get_all_components_of_type(self, component_type):
+        components = []
+        for comp in self.components:
+            if type(comp) == component_type:
+                components.append(comp)
+        for child in self.children:
+            components = components + child.get_all_components_of_type(component_type)
+        return components
 
     # ---------------- Utilities ----------------
     def get_world_position(self):

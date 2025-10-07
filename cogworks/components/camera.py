@@ -79,8 +79,7 @@ class Camera(Component):
         self.offset_x = x - (screen_width / 2) / self.zoom
         self.offset_y = y - (screen_height / 2) / self.zoom
 
-    def is_visible(self, x: float, y: float, width: float, height: float,
-                   tolerance: float = None) -> bool:
+    def is_visible(self, x: float, y: float, width: float, height: float) -> bool:
         """
         Determine if a rectangle (sprite) is visible on the camera surface.
 
@@ -89,16 +88,12 @@ class Camera(Component):
             y (float): World Y position of the sprite center.
             width (float): Width of the sprite after scaling/zoom.
             height (float): Height of the sprite after scaling/zoom.
-            tolerance (float, optional): Extra buffer in pixels to consider visible. If None, calculated dynamically.
-
         Returns:
             bool: True if the sprite is (partially) visible on camera, False if completely outside.
         """
         top, bottom, left, right = self.get_bounds()
 
-        if tolerance is None:
-            max_dim = max(width, height)
-            tolerance = max_dim * 0.5 if max_dim > 200 else 10
+        tolerance = right
 
         obj_left = x - width / 2
         obj_right = x + width / 2

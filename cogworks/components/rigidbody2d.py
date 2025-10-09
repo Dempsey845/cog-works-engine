@@ -1,5 +1,7 @@
 import math
 import pymunk
+from pymunk import Vec2d
+
 from cogworks.component import Component
 from cogworks.components.transform import Transform
 
@@ -82,8 +84,8 @@ class Rigidbody2D(Component):
         scale_x, scale_y = self.transform.local_scale_x, self.transform.local_scale_y
 
         if self.shape_type == "box":
-            width = max(self.width * scale_x, 1)
-            height = max(self.height * scale_y, 1)
+            width = max(self.width, 1)
+            height = max(self.height, 1)
         elif self.shape_type == "circle":
             radius = max(self.radius * max(scale_x, scale_y), 1)
         else:
@@ -114,7 +116,7 @@ class Rigidbody2D(Component):
 
                 # Rotate vertices around origin
                 verts = [
-                    pymunk.Vec2d(x, y).rotated(angle)
+                    Vec2d(x, y).rotated(angle)
                     for x, y in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
                 ]
 
@@ -186,27 +188,45 @@ class Rigidbody2D(Component):
         # ------------------------
         # Draw collision rays
         # ------------------------
-        ray_color = (0, 255, 255)
+
         # Horizontal rays
+        ray_color = (0, 255, 255)
+        # Center ray
         for direction in [-1, 1]:
             start = self._get_ray_start(direction)
-            end = start + pymunk.Vec2d(direction * (self.width / 2 + 20), 0)
+            end = start + Vec2d(direction * (self.width / 2 + 20), 0)
+            if camera:
+                start = camera.world_to_screen(*start)
+                end = camera.world_to_screen(*end)
+            pygame.draw.line(surface, ray_color, start, end, 1)
+        # Top Ray
+        for direction in [-1, 1]:
+            start = self._get_ray_start(direction) + Vec2d(0, -self.height//3)
+            end = start + Vec2d(direction * (self.width / 2 + 20), 0)
+            if camera:
+                start = camera.world_to_screen(*start)
+                end = camera.world_to_screen(*end)
+            pygame.draw.line(surface, ray_color, start, end, 1)
+        # Bottom Ray
+        for direction in [-1, 1]:
+            start = self._get_ray_start(direction) + Vec2d(0, self.height//3)
+            end = start + Vec2d(direction * (self.width / 2 + 20), 0)
             if camera:
                 start = camera.world_to_screen(*start)
                 end = camera.world_to_screen(*end)
             pygame.draw.line(surface, ray_color, start, end, 1)
 
         # Ground ray
-        start = pymunk.Vec2d(self.body.position.x, self.body.position.y + self.height)
-        end = start + pymunk.Vec2d(0, 10)
+        start = Vec2d(self.body.position.x, self.body.position.y + self.height//2)
+        end = start + Vec2d(0, 10)
         if camera:
             start = camera.world_to_screen(*start)
             end = camera.world_to_screen(*end)
         pygame.draw.line(surface, ray_color, start, end, 1)
 
         # Ceiling ray
-        start = pymunk.Vec2d(self.body.position.x, self.body.position.y - self.height)
-        end = start + pymunk.Vec2d(0, -10)
+        start = Vec2d(self.body.position.x, self.body.position.y - self.height//2)
+        end = start + Vec2d(0, -10)
         if camera:
             start = camera.world_to_screen(*start)
             end = camera.world_to_screen(*end)
@@ -256,15 +276,31 @@ class Rigidbody2D(Component):
         """
         if vx == 0:
             return 0
+
         direction = 1 if vx > 0 else -1
         ray_length = (self.width / 2 + abs(vx) * dt + 1)
-        start = self._get_ray_start(direction)
-        end = start + pymunk.Vec2d(direction * ray_length, 0)
-        hit = self.game_object.scene.physics_space.segment_query_first(
-            start, end, radius=0.3, shape_filter=pymunk.ShapeFilter()
-        )
-        if hit and hit.shape != self.shape:
-            return 0
+
+        # Base ray start (centre)
+        base_start = self._get_ray_start(direction)
+
+        # Offset positions for top and bottom rays
+        offset_y = self.height // 3
+        ray_offsets = [
+            Vec2d(0, 0),  # centre ray
+            Vec2d(0, -offset_y),  # top ray
+            Vec2d(0, offset_y)  # bottom ray
+        ]
+
+        # Cast all three rays
+        for offset in ray_offsets:
+            start = base_start + offset
+            end = start + Vec2d(direction * ray_length, 0)
+            hit = self.game_object.scene.physics_space.segment_query_first(
+                start, end, radius=0.3, shape_filter=pymunk.ShapeFilter()
+            )
+            if hit and hit.shape != self.shape:
+                return 0
+
         return vx
 
     def check_vertical_collision(self, vy, dt):
@@ -278,7 +314,7 @@ class Rigidbody2D(Component):
         Returns:
             float: Adjusted vertical velocity (0 if collision detected)
         """
-        if vy < 0 and self._check_ceiling(self.height + abs(vy) * dt + 1):
+        if vy < 0 and self._check_ceiling(0):
             return 0
         return vy
 
@@ -290,8 +326,8 @@ class Rigidbody2D(Component):
             bool: True if grounded, False otherwise
         """
         space = self.game_object.scene.physics_space
-        start = pymunk.Vec2d(self.body.position.x, self.body.position.y + self.height)
-        end = start + pymunk.Vec2d(0, 2)
+        start = Vec2d(self.body.position.x, self.body.position.y + self.height//2)
+        end = start + Vec2d(0, 10)
         hit = space.segment_query_first(start, end, radius=0.1, shape_filter=pymunk.ShapeFilter())
         return hit and hit.shape != self.shape
 
@@ -306,8 +342,8 @@ class Rigidbody2D(Component):
             bool: True if ceiling collision detected
         """
         space = self.game_object.scene.physics_space
-        start = pymunk.Vec2d(self.body.position.x, self.body.position.y - self.height)
-        end = start + pymunk.Vec2d(0, -ray_length)
+        start = Vec2d(self.body.position.x, self.body.position.y - self.height//2)
+        end = start + Vec2d(0, -ray_length)
         hit = space.segment_query_first(start, end, radius=0.1, shape_filter=pymunk.ShapeFilter())
         return hit and hit.shape != self.shape
 
@@ -319,12 +355,12 @@ class Rigidbody2D(Component):
             direction (int): 1 for right, -1 for left
 
         Returns:
-            pymunk.Vec2d: Start position of the ray
+            Vec2d: Start position of the ray
         """
         bb = self.shape.bb
         x = bb.right if direction > 0 else bb.left
         y = self.body.position.y
-        return pymunk.Vec2d(x, y)
+        return Vec2d(x, y)
 
     def _limit_velocity(self, body, gravity, damping, dt):
         """
@@ -332,12 +368,12 @@ class Rigidbody2D(Component):
 
         Args:
             body (pymunk.Body): The physics body
-            gravity (pymunk.Vec2d): Gravity vector
+            gravity (Vec2d): Gravity vector
             damping (float): Damping factor
             dt (float): Delta time
         """
         max_speed = 1000
-        body.velocity = pymunk.Vec2d(
+        body.velocity = Vec2d(
             max(-max_speed, min(body.velocity.x, max_speed)),
             max(-max_speed, min(body.velocity.y, max_speed))
         )

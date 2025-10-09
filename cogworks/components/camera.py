@@ -93,7 +93,7 @@ class Camera(Component):
         """
         top, bottom, left, right = self.get_bounds()
 
-        tolerance = right
+        tolerance = 500
 
         obj_left = x - width / 2
         obj_right = x + width / 2
@@ -106,7 +106,7 @@ class Camera(Component):
 
     def get_bounds(self):
         """
-        Returns the current camera bounds in world coordinates as (left, top, right, bottom).
+        Returns the current camera bounds in world coordinates as (top, bottom, left, right).
         """
         w, h = Window.get_instance().get_size()
         left = self.offset_x

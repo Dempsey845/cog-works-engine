@@ -2,7 +2,7 @@ import pygame
 from cogworks import Component
 
 class TriggerCollider(Component):
-    def __init__(self, shape="rect", width=0, height=0, radius=0, layer="Default", debug=False, layer_mask=None):
+    def __init__(self, shape="rect", width=0, height=0, radius=0, offset_x=0, offset_y=0, layer="Default", debug=False, layer_mask=None):
         """
         Initializes a trigger collider component.
 
@@ -11,6 +11,8 @@ class TriggerCollider(Component):
             width (int): Width of the rectangle collider (ignored for circle).
             height (int): Height of the rectangle collider (ignored for circle).
             radius (int): Radius of the circle collider (ignored for rect).
+            offset_x (float): Offset on the x-axis of the TriggerCollider relative to the Transform
+            offset_y (float): Offset on the y-axis of the TriggerCollider relative to the Transform
             layer (str): Layer name for collision filtering.
             debug (bool): If True, collider is drawn for debugging purposes.
             layer_mask (list[str] or None): List of layers this collider interacts with. None = all layers.
@@ -21,6 +23,8 @@ class TriggerCollider(Component):
         self.width = width
         self.height = height
         self.radius = radius
+        self.offset_x = offset_x
+        self.offset_y = offset_y
         self.rect = None
         self.center = None
         self._colliding_with = set()
@@ -51,6 +55,8 @@ class TriggerCollider(Component):
 
     def update_shape(self):
         x, y = self.transform.get_world_position()
+        x += self.offset_x
+        y += self.offset_y
 
         # Update rectangle or circle position
         if self.shape == "rect":

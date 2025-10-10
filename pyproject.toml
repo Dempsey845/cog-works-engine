@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cogworks"
-version = "0.1.14"
+version = "0.1.15"
 description = "2D Python game engine built on pygame and pymunk"
 readme = "README.md"
 requires-python = ">=3.12"

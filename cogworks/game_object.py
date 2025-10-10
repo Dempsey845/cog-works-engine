@@ -310,6 +310,10 @@ class GameObject:
         for child in self._all_children:
             child.on_disabled()
 
+    def exists(self):
+        """Returns True if the GameObject exists in the scene"""
+        return self._active
+
     def get_all_components_of_type(self, component_type):
         components = []
         for comp in self.components:

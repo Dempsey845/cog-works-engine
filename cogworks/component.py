@@ -75,3 +75,7 @@ class Component:
         Override in subclasses for cleanup logic.
         """
         pass
+
+    def exists(self):
+        """Returns True if the GameObject exists in the scene"""
+        return self.game_object.exists()

@@ -29,6 +29,7 @@ class GameObject:
 
         # Scene
         self.scene = None
+        self.camera = None
 
         # Component storage
         self.initial_components: list = []
@@ -191,6 +192,7 @@ class GameObject:
         """
         Call start() on all components and children.
         """
+        self.camera = self.scene.camera_component
         self._sort_components()
         for comp in self.initial_components:
             if not comp.has_started:
@@ -205,6 +207,12 @@ class GameObject:
         Update all components and children.
         """
         if not self._active:
+            return
+
+        self.transform.check_bounds()
+
+        x, y = self.transform.get_world_position()
+        if not self.camera.is_visible(x=x, y=y, width=0, height=0, tolerance=2000):
             return
 
         components = self._all_components

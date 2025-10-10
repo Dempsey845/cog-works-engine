@@ -262,8 +262,7 @@ class Transform(Component):
         rx, ry = self.get_right()
         return -rx, -ry
 
-    def update(self, dt: float) -> None:
-        self.in_start = False
+    def check_bounds(self) -> None:
         x, y = self.get_world_position()
 
         out_of_bounds = (

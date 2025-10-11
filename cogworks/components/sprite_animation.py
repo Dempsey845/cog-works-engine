@@ -1,8 +1,6 @@
 import os
-
 from dataclasses import dataclass, field
 from typing import Callable
-
 from cogworks import Component
 from cogworks.components.sprite import Sprite
 from cogworks.exceptions import MissingComponentError
@@ -15,6 +13,7 @@ class Animation:
     start_sprite_index: int = 1
     last_sprite_index: int = 1
     time_between_sprites: float = 0.1
+    loop: bool = True
     # key = sprite index, value = list of callbacks
     events: dict[int, list[Callable]] = field(default_factory=dict)
 
@@ -42,6 +41,8 @@ class SpriteAnimation(Component):
         self.animation_timer = 0.0
         self.sprite: Sprite | None = None
 
+        self.is_playing: bool = False
+
     def start(self):
         self.sprite_index = 0
         self.animation_timer = 0.0
@@ -51,7 +52,7 @@ class SpriteAnimation(Component):
             raise MissingComponentError(Sprite, self.game_object)
 
     def update(self, dt: float):
-        if self.selected_animation is None or self.sprite is None:
+        if not self.is_playing or self.selected_animation is None or self.sprite is None:
             return
 
         self.animation_timer += dt
@@ -67,16 +68,25 @@ class SpriteAnimation(Component):
             self.selected_animation.trigger_events(self.sprite_index)
 
             self.sprite_index += 1
+
+            # Handle end of animation
             if self.sprite_index > self.selected_animation.last_sprite_index:
-                self.sprite_index = self.selected_animation.start_sprite_index
+                if self.selected_animation.loop:
+                    # Loop back to start
+                    self.sprite_index = self.selected_animation.start_sprite_index
+                else:
+                    # Stop at end if not looping
+                    self.is_playing = False
+                    self.sprite_index = self.selected_animation.last_sprite_index
 
             self.animation_timer = 0.0
 
     def clear_selected_animation(self):
         """Clears the selected animation so that none will play."""
         self.selected_animation = None
+        self.is_playing = False
 
-    def set_animation(self, name: str):
+    def set_animation(self, name: str, play: bool = True):
         """Change the selected animation."""
         self.selected_animation = next(
             (anim for anim in self.animations if anim.name == name), None
@@ -87,6 +97,8 @@ class SpriteAnimation(Component):
             return
 
         self.sprite_index = self.selected_animation.start_sprite_index
+        self.is_playing = play
+        self.animation_timer = 0.0
 
     def add_animation(
         self,
@@ -95,6 +107,7 @@ class SpriteAnimation(Component):
         start_sprite_index: int = 1,
         last_sprite_index: int = 1,
         time_between_sprites: float = 0.1,
+        loop: bool = True,
     ):
         """ Add a sprite animation. The path to the sprite shouldn't include an index, for example use: "/goblin.png" and the system will generate "/goblin_0.png", "/goblin_1.png", etc. """
         if time_between_sprites < 0.1:
@@ -107,6 +120,7 @@ class SpriteAnimation(Component):
             start_sprite_index=start_sprite_index,
             last_sprite_index=last_sprite_index,
             time_between_sprites=time_between_sprites,
+            loop=loop,
         )
 
         self.animations.append(animation)

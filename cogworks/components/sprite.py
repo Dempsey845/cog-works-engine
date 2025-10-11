@@ -14,7 +14,8 @@ class Sprite(Component):
         scale_factor: float = 1.0,
         alpha: int = 255,
         flip_x: bool = False,
-        flip_y: bool = False
+        flip_y: bool = False,
+        pixel_art_mode: bool = False
     ):
         """
         Sprite component to render an image associated with a GameObject.
@@ -27,6 +28,7 @@ class Sprite(Component):
             alpha (int): Transparency of the sprite image (0-255)
             flip_x (bool): Flip the sprite image on the x-axis
             flip_y (bool): Flip the sprite image on the y-axis
+            pixel_art_mode (bool): If True, disables smooth scaling for crisp pixel art (default: False)
         """
         super().__init__()
         self.image_path = image_path
@@ -43,6 +45,7 @@ class Sprite(Component):
         self.alpha = alpha  # Store alpha value
         self.flip_x = flip_x  # Flip horizontally
         self.flip_y = flip_y  # Flip vertically
+        self.pixel_art_mode = pixel_art_mode
 
     def start(self):
         self.transform = self.game_object.get_component(Transform)
@@ -72,32 +75,36 @@ class Sprite(Component):
         sy *= self.scale_factor
 
         avg_scale = (sx + sy) / 2 if (sx != sy) else sx
-        self.image = pygame.transform.rotozoom(self.original_image, angle, avg_scale)
 
-        # Apply flipping
+        if self.pixel_art_mode:
+            w = int(self.original_image.get_width() * sx)
+            h = int(self.original_image.get_height() * sy)
+            scaled_image = pygame.transform.scale(self.original_image, (w, h))
+            if angle != 0:
+                scaled_image = pygame.transform.rotate(scaled_image, angle)
+            self.image = scaled_image
+        else:
+            self.image = pygame.transform.rotozoom(self.original_image, angle, avg_scale)
+
         if self.flip_x or self.flip_y:
             self.image = pygame.transform.flip(self.image, self.flip_x, self.flip_y)
 
-        # Apply alpha
         self.image.set_alpha(self.alpha)
 
-        # Apply offset, scaled by scale_factor
         final_x = self.transform.local_x + self.offset_x * self.scale_factor
         final_y = self.transform.local_y + self.offset_y * self.scale_factor
 
         self.rect = self.image.get_rect(center=(final_x, final_y))
-        self._last_transform_state = (sx, sy, self.transform.local_rotation, self.flip_x, self.flip_y)
+        self._last_transform_state = (sx, sy, self.transform.local_rotation, self.flip_x, self.flip_y, self.pixel_art_mode)
         self._scaled_image_cache.clear()
 
     def update(self, dt: float):
         if not self.transform:
             return
 
-        # Current state
         sx, sy = self.transform.get_local_scale()
-        state = (sx, sy, self.transform.local_rotation, self.flip_x, self.flip_y)
+        state = (sx, sy, self.transform.local_rotation, self.flip_x, self.flip_y, self.pixel_art_mode)
 
-        # Only update if something actually changed
         if state != self._last_transform_state:
             self._apply_transform()
 
@@ -105,7 +112,6 @@ class Sprite(Component):
         if not self.transform or not self.image:
             return
 
-        # Apply offset and scale_factor
         x, y = self.transform.get_world_position()
         x += self.offset_x * self.scale_factor
         y += self.offset_y * self.scale_factor
@@ -114,14 +120,17 @@ class Sprite(Component):
         w, h = img.get_size()
 
         zoom = self.camera.zoom if self.camera else 1.0
-        cache_key = (w, h, zoom, self.scale_factor, self.alpha, self.flip_x, self.flip_y)  # include flip state
+        cache_key = (w, h, zoom, self.scale_factor, self.alpha, self.flip_x, self.flip_y, self.pixel_art_mode)
         if cache_key in self._scaled_image_cache:
             img_scaled = self._scaled_image_cache[cache_key]
             w_scaled, h_scaled = img_scaled.get_size()
         else:
             w_scaled, h_scaled = int(w * zoom), int(h * zoom)
-            img_scaled = pygame.transform.scale(img, (w_scaled, h_scaled))
-            img_scaled.set_alpha(self.alpha)  # ensure scaled image keeps alpha
+            if self.pixel_art_mode:
+                img_scaled = pygame.transform.scale(img, (w_scaled, h_scaled))
+            else:
+                img_scaled = pygame.transform.smoothscale(img, (w_scaled, h_scaled))
+            img_scaled.set_alpha(self.alpha)
             self._scaled_image_cache[cache_key] = img_scaled
 
         if self.camera and not self.camera.is_visible(x=x, y=y, width=w_scaled, height=h_scaled):

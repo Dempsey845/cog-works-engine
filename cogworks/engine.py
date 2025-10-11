@@ -12,7 +12,7 @@ class Engine:
     Provides update, render, event handling, and scene management.
     """
 
-    def __init__(self, width: int = 500, height: int = 500, caption: str = "CogWorks Engine", fps: int = 60, world_bound_x: int = 5000, world_bound_y: int = 5000):
+    def __init__(self, width: int = 500, height: int = 500, caption: str = "CogWorks Engine", fps: int = 60, world_bound_x: float = 5000, world_bound_y: float = 5000):
         """
         Initialise the cogworks with a window, scene manager, and runtime state.
 
@@ -21,8 +21,8 @@ class Engine:
             height (int, optional): Initial height of the window. Defaults to 500.
             caption (str, optional): The window caption. Defaults to "CogWorks Engine".
             fps (int, optional): Frames per second. Defaults to 60.
-            world_bound_x (int, optional): World boundary x position for GameObject, if passes it, it gets destroyed
-            world_bound_y (int, optional): World boundary y position for GameObject, if passes it, it gets destroyed
+            world_bound_x (float, optional): World boundary x position for GameObject, if passes it, it gets destroyed
+            world_bound_y (float, optional): World boundary y position for GameObject, if passes it, it gets destroyed
         """
         self.window = Window(pygame, width, height, caption, resizable=True)
         self.running = True

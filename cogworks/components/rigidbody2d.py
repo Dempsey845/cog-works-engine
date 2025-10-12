@@ -154,7 +154,7 @@ class Rigidbody2D(Component):
             return
         import pygame
 
-        camera = getattr(self.game_object.scene, "camera_component", None)
+        camera = self.game_object.scene.camera_component
         pos = camera.world_to_screen(*self.body.position) if camera else self.body.position
         pos = (int(pos[0]), int(pos[1]))
 

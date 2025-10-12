@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 from cogworks import Component
 from cogworks.components.sprite import Sprite
-from cogworks.exceptions import MissingComponentError
+from cogworks.exceptions.missing_component_error import MissingComponentError
 
 
 @dataclass

@@ -1,6 +1,7 @@
 import pymunk
 from operator import attrgetter
 
+from cogworks.components.audio_listener import AudioListener
 from cogworks.components.camera import Camera
 from cogworks.game_object import GameObject
 from cogworks.trigger_collision_manager import TriggerCollisionManager
@@ -30,6 +31,7 @@ class Scene:
         self.camera = GameObject("Camera")
         self.camera_component = Camera()
         self.camera.add_component(self.camera_component)
+        self.camera.add_component(AudioListener())
         self.camera.scene = self
 
         self.initial_objects: list[GameObject] = [self.camera]
@@ -56,6 +58,8 @@ class Scene:
         self.has_started = False
 
     def _cleanup(self):
+        self.camera.get_component(AudioListener).clear_sources()
+
         # Create a new physics space
         self.physics_space = pymunk.Space()
         self.physics_space.gravity = self.gravity
@@ -176,6 +180,9 @@ class Scene:
             tuple[int, int]: Width and height of the window.
         """
         return self.engine.window.get_size()
+
+    def get_active_audio_listener(self):
+        return self.camera.get_component(AudioListener)
 
     def __repr__(self):
         return f"<Scene name='{self.name}', objects={len(self.sorted_objects)}>"

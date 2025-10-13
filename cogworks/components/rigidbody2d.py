@@ -1,4 +1,6 @@
 import math
+from typing import Tuple
+
 import pymunk
 from pymunk import Vec2d
 
@@ -7,23 +9,29 @@ from cogworks.components.transform import Transform
 
 
 class Rigidbody2D(Component):
+    """
+       2D Rigidbody component supporting box and circle colliders with optional
+       velocity-controlled movement, collision detection, and debug rendering.
+
+       Integrates with Pymunk physics for 2D simulations.
+   """
+
     def __init__(
-        self,
-        shape_type="box",
-        width=0,
-        height=0,
-        radius=0,
-        mass=1.0,
-        static=False,
-        debug=False,
-        freeze_rotation=False,
-        friction=0.7,
-        elasticity=0.0,
-        velocity_controlled=False,
+            self,
+            shape_type: str = "box",
+            width: float = 0,
+            height: float = 0,
+            radius: float = 0,
+            mass: float = 1.0,
+            static: bool = False,
+            debug: bool = False,
+            freeze_rotation: bool = False,
+            friction: float = 0.7,
+            elasticity: float = 0.0,
+            velocity_controlled: bool = False,
     ):
         """
-        2D Rigidbody component supporting box and circle colliders with optional
-        velocity-controlled movement.
+        Initialise a Rigidbody2D component.
 
         Args:
             shape_type (str): "box" or "circle"
@@ -39,110 +47,30 @@ class Rigidbody2D(Component):
             velocity_controlled (bool): If True, Rigidbody velocity is manually controlled
         """
         super().__init__()
-        self.shape_type = shape_type
-        self.width = width
-        self.height = height
-        self.radius = radius
-        self.mass = mass
-        self.static = static
-        self.debug = debug
-        self.freeze_rotation = freeze_rotation
-        self.friction = friction
-        self.elasticity = elasticity
-        self.velocity_controlled = velocity_controlled
+        self.shape_type: str = shape_type
+        self.width: float = width
+        self.height: float = height
+        self.radius: float = radius
+        self.mass: float = mass
+        self.static: bool = static
+        self.debug: bool = debug
+        self.freeze_rotation: bool = freeze_rotation
+        self.friction: float = friction
+        self.elasticity: float = elasticity
+        self.velocity_controlled: bool = velocity_controlled
 
-        self.transform: Transform = None
-        self.body: pymunk.Body = None
-        self.shape: pymunk.Shape = None
-        self.is_grounded = False
-        self.desired_velocity = 0, 0
+        self.transform: Transform | None = None
+        self.body: pymunk.Body | None = None
+        self.shape: pymunk.Shape | None = None
+        self.is_grounded: bool = False
+        self.desired_velocity: Tuple[float, float] = (0, 0)
 
-    def start(self):
+    def start(self) -> None:
         """Initialises the Rigidbody2D component by linking it to the Transform and creating the physics body."""
         self.transform = self.game_object.get_component(Transform)
         self._create_body()
 
-    def on_disabled(self):
-        """Removes the body/shape from the physics space but keeps them for later re-enable."""
-        if self.body and self.shape:
-            space = self.game_object.scene.physics_space
-            if self.body in space.bodies:
-                space.remove(self.body, self.shape)
-
-    def on_remove(self) -> None:
-        """Completely removes the body/shape from the space and clears references."""
-        if self.body and self.shape:
-            space = self.game_object.scene.physics_space
-            if self.body in space.bodies:
-                space.remove(self.body, self.shape)
-        self.body = None
-        self.shape = None
-        self.transform._rb_body = None
-
-    def _create_body(self):
-        """Internal method to create the pymunk physics body and collider based on the component settings."""
-        scale_x, scale_y = self.transform.local_scale_x, self.transform.local_scale_y
-
-        if self.shape_type == "box":
-            width = max(self.width, 1)
-            height = max(self.height, 1)
-        elif self.shape_type == "circle":
-            radius = max(self.radius * max(scale_x, scale_y), 1)
-        else:
-            raise ValueError(f"Unknown shape_type: {self.shape_type}")
-
-        if self.static:
-            self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
-        else:
-            safe_mass = max(self.mass, 0.0001)
-            if self.shape_type == "box":
-                moment = float("inf") if self.freeze_rotation else pymunk.moment_for_box(safe_mass, (width, height))
-            else:
-                moment = float("inf") if self.freeze_rotation else pymunk.moment_for_circle(safe_mass, 0, radius)
-            self.body = pymunk.Body(safe_mass, moment)
-            self.body.velocity_func = self._limit_velocity
-
-        self.body.position = self.transform.get_local_position()
-        self.body.angle = -math.radians(self.transform.local_rotation)
-        self.transform._rb_body = self.body
-
-        if self.shape_type == "box":
-            if self.static:
-                self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
-                self.body.position = self.transform.get_local_position()
-
-                hw, hh = width / 2, height / 2
-                angle = -math.radians(self.transform.local_rotation)
-
-                # Rotate vertices around origin
-                verts = [
-                    Vec2d(x, y).rotated(angle)
-                    for x, y in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
-                ]
-
-                # Create poly relative to body
-                self.shape = pymunk.Poly(self.body, verts)
-            else:
-                self.shape = pymunk.Poly.create_box(self.body, (width, height))
-        else:
-            self.shape = pymunk.Circle(self.body, radius)
-
-        self.shape.friction = self.friction
-        self.shape.elasticity = self.elasticity
-
-        self.game_object.scene.physics_space.add(self.body, self.shape)
-
-    def apply_force(self, fx, fy):
-        """
-        Applies a force to the Rigidbody2D at its centre of mass.
-
-        Args:
-            fx (float): Force along the x-axis
-            fy (float): Force along the y-axis
-        """
-        self.body.apply_force_at_world_point((fx, fy), self.body.position)
-
-    def render(self, surface):
+    def render(self, surface) -> None:
         """
         Renders debug visuals for the Rigidbody2D, including shape, centre of mass, local axes,
         and collision rays if velocity-controlled.
@@ -201,7 +129,7 @@ class Rigidbody2D(Component):
             pygame.draw.line(surface, ray_color, start, end, 1)
         # Top Ray
         for direction in [-1, 1]:
-            start = self._get_ray_start(direction) + Vec2d(0, -self.height//3)
+            start = self._get_ray_start(direction) + Vec2d(0, -self.height // 3)
             end = start + Vec2d(direction * (self.width / 2 + 20), 0)
             if camera:
                 start = camera.world_to_screen(*start)
@@ -209,7 +137,7 @@ class Rigidbody2D(Component):
             pygame.draw.line(surface, ray_color, start, end, 1)
         # Bottom Ray
         for direction in [-1, 1]:
-            start = self._get_ray_start(direction) + Vec2d(0, self.height//3)
+            start = self._get_ray_start(direction) + Vec2d(0, self.height // 3)
             end = start + Vec2d(direction * (self.width / 2 + 20), 0)
             if camera:
                 start = camera.world_to_screen(*start)
@@ -217,7 +145,7 @@ class Rigidbody2D(Component):
             pygame.draw.line(surface, ray_color, start, end, 1)
 
         # Ground ray
-        start = Vec2d(self.body.position.x, self.body.position.y + self.height//2)
+        start = Vec2d(self.body.position.x, self.body.position.y + self.height // 2)
         end = start + Vec2d(0, 10)
         if camera:
             start = camera.world_to_screen(*start)
@@ -225,17 +153,18 @@ class Rigidbody2D(Component):
         pygame.draw.line(surface, ray_color, start, end, 1)
 
         # Ceiling ray
-        start = Vec2d(self.body.position.x, self.body.position.y - self.height//2)
+        start = Vec2d(self.body.position.x, self.body.position.y - self.height // 2)
         end = start + Vec2d(0, -10)
         if camera:
             start = camera.world_to_screen(*start)
             end = camera.world_to_screen(*end)
         pygame.draw.line(surface, ray_color, start, end, 1)
 
-    # ------------------------
-    # Fixed Update / Collisions
-    # ------------------------
-    def fixed_update(self, dt):
+        # ------------------------
+        # Fixed Update / Collisions
+        # ------------------------
+
+    def fixed_update(self, dt) -> None:
         """
         Updates the Rigidbody2D physics state each fixed timestep.
         Handles velocity-controlled movement and synchronises Transform with physics body.
@@ -260,10 +189,90 @@ class Rigidbody2D(Component):
             self.transform.set_world_position(*self.body.position)
             self.transform.set_local_rotation(-math.degrees(self.body.angle))
 
+    def on_disabled(self) -> None:
+        """Removes the body/shape from the physics space but keeps them for later re-enable."""
+        if self.body and self.shape:
+            space = self.game_object.scene.physics_space
+            if self.body in space.bodies:
+                space.remove(self.body, self.shape)
+
+    def on_remove(self) -> None:
+        """Completely removes the body/shape from the space and clears references."""
+        if self.body and self.shape:
+            space = self.game_object.scene.physics_space
+            if self.body in space.bodies:
+                space.remove(self.body, self.shape)
+        self.body = None
+        self.shape = None
+        self.transform._rb_body = None
+
+    def _create_body(self) -> None:
+        """Internal method to create the pymunk physics body and collider based on the component settings."""
+        scale_x, scale_y = self.transform.local_scale_x, self.transform.local_scale_y
+
+        if self.shape_type == "box":
+            width = max(self.width, 1)
+            height = max(self.height, 1)
+        elif self.shape_type == "circle":
+            radius = max(self.radius * max(scale_x, scale_y), 1)
+        else:
+            raise ValueError(f"Unknown shape_type: {self.shape_type}")
+
+        if self.static:
+            self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+        else:
+            safe_mass = max(self.mass, 0.0001)
+            if self.shape_type == "box":
+                moment = float("inf") if self.freeze_rotation else pymunk.moment_for_box(safe_mass, (width, height))
+            else:
+                moment = float("inf") if self.freeze_rotation else pymunk.moment_for_circle(safe_mass, 0, radius)
+            self.body = pymunk.Body(safe_mass, moment)
+            self.body.velocity_func = self._limit_velocity
+
+        self.body.position = self.transform.get_local_position()
+        self.body.angle = -math.radians(self.transform.local_rotation)
+        self.transform._rb_body = self.body
+
+        if self.shape_type == "box":
+            if self.static:
+                self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
+                self.body.position = self.transform.get_local_position()
+
+                hw, hh = width / 2, height / 2
+                angle = -math.radians(self.transform.local_rotation)
+
+                # Rotate vertices around origin
+                verts = [
+                    Vec2d(x, y).rotated(angle)
+                    for x, y in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+                ]
+
+                # Create poly relative to body
+                self.shape = pymunk.Poly(self.body, verts)
+            else:
+                self.shape = pymunk.Poly.create_box(self.body, (width, height))
+        else:
+            self.shape = pymunk.Circle(self.body, radius)
+
+        self.shape.friction = self.friction
+        self.shape.elasticity = self.elasticity
+
+        self.game_object.scene.physics_space.add(self.body, self.shape)
+
+    def apply_force(self, fx, fy) -> None:
+        """
+        Applies a force to the Rigidbody2D at its centre of mass.
+
+        Args:
+            fx (float): Force along the x-axis
+            fy (float): Force along the y-axis
+        """
+        self.body.apply_force_at_world_point((fx, fy), self.body.position)
+
     # ------------------------
     # Collision / Raycasting
     # ------------------------
-    def check_horizontal_collision(self, vx, dt):
+    def check_horizontal_collision(self, vx, dt) -> float:
         """
         Checks for collisions horizontally and prevents movement if a collision occurs.
 
@@ -303,7 +312,7 @@ class Rigidbody2D(Component):
 
         return vx
 
-    def check_vertical_collision(self, vy, dt):
+    def check_vertical_collision(self, vy, dt) -> float:
         """
         Checks for collisions vertically and prevents movement through ceilings.
 
@@ -314,11 +323,11 @@ class Rigidbody2D(Component):
         Returns:
             float: Adjusted vertical velocity (0 if collision detected)
         """
-        if vy < 0 and self._check_ceiling(0):
+        if vy < 0 and self.check_ceiling(0):
             return 0
         return vy
 
-    def check_grounded(self):
+    def check_grounded(self) -> bool:
         """
         Determines if the Rigidbody2D is currently grounded.
 
@@ -331,7 +340,7 @@ class Rigidbody2D(Component):
         hit = space.segment_query_first(start, end, radius=0.1, shape_filter=pymunk.ShapeFilter())
         return hit and hit.shape != self.shape
 
-    def _check_ceiling(self, ray_length):
+    def check_ceiling(self, ray_length) -> bool:
         """
         Internal helper to check if there is a collision above the Rigidbody2D.
 
@@ -347,7 +356,7 @@ class Rigidbody2D(Component):
         hit = space.segment_query_first(start, end, radius=0.1, shape_filter=pymunk.ShapeFilter())
         return hit and hit.shape != self.shape
 
-    def _get_ray_start(self, direction):
+    def _get_ray_start(self, direction) -> Vec2d:
         """
         Computes the starting point of a horizontal raycast for collision detection.
 
@@ -362,7 +371,7 @@ class Rigidbody2D(Component):
         y = self.body.position.y
         return Vec2d(x, y)
 
-    def _limit_velocity(self, body, gravity, damping, dt):
+    def _limit_velocity(self, body, gravity, damping, dt) -> None:
         """
         Limits the Rigidbody2D velocity to a maximum value to help prevent tunnelling.
 

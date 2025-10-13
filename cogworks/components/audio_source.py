@@ -4,18 +4,52 @@ from cogworks.utils.asset_loader import load_user_audio
 
 
 class AudioSource(Component):
-    def __init__(self):
+    """
+    Represents a sound-emitting component that can play, stop, and spatially
+    adjust audio based on its position relative to an active `AudioListener`.
+
+    This component uses `pygame.mixer` for playback and supports features such as
+    looping, distance-based attenuation, stereo panning, and one-shot effects.
+    """
+
+    def __init__(
+        self,
+        clip_path: str | None = None,
+        loop: bool = False,
+        volume: float = 1.0,
+        position: tuple[float, float] = (0.0, 0.0),
+        listener_position: tuple[float, float] = (0.0, 0.0),
+        max_distance: float = 5000.0,
+        auto_update_position: bool = True,
+    ):
+        """
+        Initialise an AudioSource component.
+
+        Args:
+            clip_path (str | None): Optional path to the initial audio clip.
+            loop (bool): Whether the clip should loop when played.
+            volume (float): Base volume of the audio (0.0 - 1.0).
+            position (tuple[float, float]): Initial world position of the source.
+            listener_position (tuple[float, float]): Position of the listener.
+            max_distance (float): Maximum distance for spatial attenuation.
+            auto_update_position (bool): Whether to auto-update position from the game object.
+        """
         super().__init__()
-        self.clip_path: str | None = None
+        self.clip_path: str | None = clip_path
         self.clip: pygame.mixer.Sound | None = None
         self.channel: pygame.mixer.Channel | None = None
-        self.loop: bool = False
-        self.volume: float = 1.0
-        self.position: tuple[float, float] = (0.0, 0.0)
-        self.listener_position: tuple[float, float] = (0.0, 0.0)
-        self.max_distance: float = 5000.0
-        self.auto_update_position: bool = True
+        self.loop: bool = loop
+        self.volume: float = volume
+        self.position: tuple[float, float] = position
+        self.listener_position: tuple[float, float] = listener_position
+        self.max_distance: float = max_distance
+        self.auto_update_position: bool = auto_update_position
         self._listener = None
+
+        # Automatically load clip if path provided
+        if self.clip_path:
+            self.set_clip(self.clip_path)
+
 
     def start(self) -> None:
         if not pygame.mixer.get_init():
@@ -26,29 +60,62 @@ class AudioSource(Component):
             self._listener = listener
 
     def on_disabled(self) -> None:
+        """
+        Called when the component is disabled.
+
+        Unregisters the source from its listener and stops any active playback.
+        """
         if self._listener:
             self._listener.unregister_source(self)
             self._listener = None
         self.stop()
 
     def on_remove(self) -> None:
+        """
+        Called when the component is removed from its game object.
+
+        Unregisters from the listener and stops all audio to prevent leaks or crashes.
+        """
         if self._listener:
             self._listener.unregister_source(self)
             self._listener = None
         self.stop()
 
     def update(self, dt: float) -> None:
+        """
+        Called every frame to update the component.
+
+        Automatically updates the audio source’s position based on the
+        game object’s transform (if enabled) and applies spatial audio logic.
+
+        Args:
+            dt (float): Delta time since the last update (unused, for consistency).
+        """
         if self.auto_update_position:
             self.position = self.game_object.transform.get_world_position()
         self.update_spatial_audio()
 
     def set_clip(self, relative_path: str) -> None:
+        """
+        Load an audio clip from the given relative path.
+
+        Args:
+            relative_path (str): Path to the audio file relative to the asset directory.
+        """
         self.clip_path = relative_path
         self.clip = load_user_audio(relative_path)
         self.clip.set_volume(self.volume)
 
     def play(self, bypass_spatial: bool = False) -> None:
-        """Play the assigned clip, optionally bypassing distance attenuation."""
+        """
+        Play the currently assigned audio clip.
+
+        Optionally bypasses spatial effects (distance attenuation and stereo panning)
+        and plays the clip at full volume.
+
+        Args:
+            bypass_spatial (bool): If True, ignore spatial effects during playback.
+        """
         if not self.clip:
             return
 
@@ -62,12 +129,14 @@ class AudioSource(Component):
 
     def play_one_shot(self, relative_path: str, volume: float = 1.0, bypass_spatial: bool = False) -> None:
         """
-        Play a single audio clip once without affecting the main clip.
+        Play a one-shot (temporary) audio clip without affecting the main clip.
+
+        Useful for short sound effects such as clicks, footsteps, or impacts.
 
         Args:
             relative_path (str): Path to the audio file.
-            volume (float): Volume multiplier (0.0 - 1.0)
-            bypass_spatial (bool): If True, play at full volume ignoring listener distance.
+            volume (float): Playback volume multiplier (0.0 - 1.0).
+            bypass_spatial (bool): If True, ignore spatial attenuation and panning.
         """
         if not pygame.mixer.get_init():
             pygame.mixer.init()
@@ -85,14 +154,30 @@ class AudioSource(Component):
             print(f"[AudioSource] Error playing one-shot '{relative_path}': {e}")
 
     def stop(self) -> None:
+        """
+        Stop playback of the current clip, if one is active.
+        """
         if self.channel:
             self.channel.stop()
             self.channel = None
 
     def set_listener_position(self, pos: tuple[float, float]) -> None:
+        """
+        Update the listener’s position used for spatial calculations.
+
+        Args:
+            pos (tuple[float, float]): The (x, y) position of the listener.
+        """
         self.listener_position = pos
 
     def update_spatial_audio(self) -> None:
+        """
+        Apply spatial audio effects such as distance attenuation and stereo panning.
+
+        Calculates the volume and stereo balance based on the distance and
+        direction of the audio source relative to the listener. Closer sounds
+        play louder and more central; distant sounds fade and pan left/right.
+        """
         if not self.channel:
             return
 

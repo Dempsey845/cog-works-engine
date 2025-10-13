@@ -26,6 +26,7 @@ class GameObject:
         self.name = name
         self._active = True
         self.z_index = z_index
+        self.is_ui_object = False
 
         # Scene
         self.scene = None
@@ -209,10 +210,10 @@ class GameObject:
         if not self._active:
             return
 
-        self.transform.check_bounds()
+        if not self.is_ui_object: self.transform.check_bounds()
 
         x, y = self.transform.get_world_position()
-        if not self.camera.is_visible(x=x, y=y, width=0, height=0, tolerance=2000):
+        if not self.is_ui_object and not self.camera.is_visible(x=x, y=y, width=0, height=0, tolerance=2000):
             return
 
         components = self._all_components

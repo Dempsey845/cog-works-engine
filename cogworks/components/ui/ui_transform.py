@@ -30,15 +30,19 @@ class UITransform(Component):
         self.debug = debug
 
     def on_enabled(self):
+        self.game_object.is_ui_object = True
         EventManager.get_instance().subscribe(self._on_event)
 
     def on_disabled(self):
+        self.game_object.is_ui_object = False
         EventManager.get_instance().unsubscribe(self._on_event)
 
     def on_remove(self):
+        self.game_object.is_ui_object = False
         EventManager.get_instance().unsubscribe(self._on_event)
 
     def start(self):
+        self.game_object.is_ui_object = True
         self.update_rect()
 
     def update_rect(self):

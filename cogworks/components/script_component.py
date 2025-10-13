@@ -44,10 +44,3 @@ class ScriptComponent(Component):
         Override this in subclasses for cleanup logic.
         """
         super().on_remove()
-
-    def reset_to_start(self):
-        """
-        Called when the scene is restarted.
-        Override this in subclasses for cleanup logic.
-        """
-        super().reset_to_start()

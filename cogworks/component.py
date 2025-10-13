@@ -69,13 +69,6 @@ class Component:
         """
         pass
 
-    def reset_to_start(self):
-        """
-        Called when the scene is restarted.
-        Override in subclasses for cleanup logic.
-        """
-        pass
-
     def exists(self):
         """Returns True if the GameObject exists in the scene"""
         return self.game_object.exists()

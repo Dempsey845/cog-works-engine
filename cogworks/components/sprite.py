@@ -62,12 +62,6 @@ class Sprite(Component):
             self.transform = Transform()
             self.game_object.add_component(self.transform)
 
-        # Configure rigidbody collider based on image size
-        rb: Rigidbody2D = self.game_object.get_component(Rigidbody2D)
-        if rb and (rb.width == 0 or rb.height == 0):
-            rb.width = self.original_image.get_width()
-            rb.height = self.original_image.get_height()
-
         self._apply_transform()
 
     def _apply_transform(self):

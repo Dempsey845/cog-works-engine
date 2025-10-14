@@ -68,6 +68,16 @@ class Rigidbody2D(Component):
     def start(self) -> None:
         """Initialises the Rigidbody2D component by linking it to the Transform and creating the physics body."""
         self.transform = self.game_object.get_component(Transform)
+
+        # Get sprite dimensions if shape dimensions are not set
+        sprite = self.game_object.get_component("Sprite")
+        if sprite:
+            if self.shape_type == "box" and (self.width == 0 or self.height == 0):
+                self.width = sprite.image.get_width()
+                self.height = sprite.image.get_height()
+            elif self.shape_type == "circle" and self.radius == 0:
+                self.radius = max(sprite.image.get_width(), sprite.image.get_height()) // 2
+
         self._create_body()
 
     def render(self, surface) -> None:

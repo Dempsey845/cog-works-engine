@@ -29,7 +29,7 @@ class Rigidbody2D(Component):
             friction: float = 0.7,
             elasticity: float = 0.0,
             velocity_controlled: bool = False,
-            vertical_checks: bool = True,
+            movement_mode: str = "platformer"
     ):
         """
         Initialise a Rigidbody2D component.
@@ -46,7 +46,7 @@ class Rigidbody2D(Component):
             friction (float): Shape friction coefficient
             elasticity (float): Shape elasticity coefficient
             velocity_controlled (bool): If True, Rigidbody velocity is manually controlled
-            vertical_checks (bool): If True, check for vertical collisions when velocity controlled (good for platformers, disable for top-down movement)
+            movement_mode (str): "platformer" or "top_down"
         """
         super().__init__()
         self.shape_type: str = shape_type
@@ -60,7 +60,7 @@ class Rigidbody2D(Component):
         self.friction: float = friction
         self.elasticity: float = elasticity
         self.velocity_controlled: bool = velocity_controlled
-        self.vertical_checks: bool = vertical_checks
+        self.movement_mode: str = movement_mode
 
         self.transform: Transform | None = None
         self.body: pymunk.Body | None = None
@@ -157,21 +157,27 @@ class Rigidbody2D(Component):
                 end = camera.world_to_screen(*end)
             pygame.draw.line(surface, ray_color, start, end, 1)
 
-        # Ground ray
-        start = Vec2d(self.body.position.x, self.body.position.y + self.height // 2)
-        end = start + Vec2d(0, 10)
-        if camera:
-            start = camera.world_to_screen(*start)
-            end = camera.world_to_screen(*end)
-        pygame.draw.line(surface, ray_color, start, end, 1)
+        # Vertical rays (ground + ceiling)
+        vertical_offsets = [-self.width // 3, 0, self.width // 3]  # left, centre, right
 
-        # Ceiling ray
-        start = Vec2d(self.body.position.x, self.body.position.y - self.height // 2)
-        end = start + Vec2d(0, -10)
-        if camera:
-            start = camera.world_to_screen(*start)
-            end = camera.world_to_screen(*end)
-        pygame.draw.line(surface, ray_color, start, end, 1)
+        # Ground rays
+        for offset_x in vertical_offsets:
+            ground_epsilon = 0.1  # small offset to avoid starting inside colliders
+            start = Vec2d(self.body.position.x + offset_x, self.body.position.y + self.height / 2 - ground_epsilon)
+            end = start + Vec2d(0, 10)
+            if camera:
+                start = camera.world_to_screen(*start)
+                end = camera.world_to_screen(*end)
+            pygame.draw.line(surface, ray_color, start, end, 1)
+
+        # Ceiling rays
+        for offset_x in vertical_offsets:
+            start = Vec2d(self.body.position.x + offset_x, self.body.position.y - self.height // 2)
+            end = start + Vec2d(0, -10)
+            if camera:
+                start = camera.world_to_screen(*start)
+                end = camera.world_to_screen(*end)
+            pygame.draw.line(surface, ray_color, start, end, 1)
 
         # ------------------------
         # Fixed Update / Collisions
@@ -181,26 +187,26 @@ class Rigidbody2D(Component):
         """
         Updates the Rigidbody2D physics state each fixed timestep.
         Handles velocity-controlled movement and synchronises Transform with physics body.
-
-        Args:
-            dt (float): Fixed delta time in seconds
         """
         if self.velocity_controlled and not self.static:
             vx_input, vy_input = self.desired_velocity
             current_vx, current_vy = self.body.velocity
 
-            vx = vx_input
-            if getattr(self, "vertical_checks", False):
-                # Preserve physics vertical velocity
-                vy = current_vy
-            else:
-                # Apply vertical input directly
-                vy = vy_input
+            if self.movement_mode == "platformer":
+                # Platformer: preserve physics vertical velocity (gravity)
+                vy_candidate = current_vy
+                movement = Vec2d(vx_input, vy_candidate)
+                movement = Vec2d(
+                    self.check_horizontal_collision(movement.x, dt),
+                    self.check_vertical_collision(movement.y, dt)
+                )
+            else:  # top_down
+                # Top-down: slide along obstacles
+                movement = Vec2d(vx_input, vy_input)
+                movement = self.check_movement_collision(movement, dt)
 
-            # Apply collision checks
-            vx = self.check_horizontal_collision(vx, dt)
-            vy = self.check_vertical_collision(vy, dt)
-            self.body.velocity = vx, vy
+            # Apply final velocity
+            self.body.velocity = movement
 
         if not self.static:
             self.transform.set_world_position(*self.body.position)
@@ -344,6 +350,48 @@ class Rigidbody2D(Component):
             return 0
         return vy
 
+    def check_movement_collision(self, movement: Vec2d, dt: float) -> Vec2d:
+        """
+        Checks for collisions along a movement vector and prevents tunnelling.
+
+        Args:
+            movement (Vec2d): Desired movement (vx, vy)
+            dt (float): Fixed delta time
+
+        Returns:
+            Vec2d: Adjusted movement vector (0 in directions with collisions)
+        """
+        if movement.length == 0:
+            return Vec2d(0, 0)
+
+        space = self.game_object.scene.physics_space
+        direction = movement.normalized()
+        ray_length = movement.length * dt + max(self.width, self.height) / 2
+
+        # Offsets for multiple rays (center, top/left, bottom/right) with extra padding
+        offset_x = self.width / 3 + 3  # move rays slightly out horizontally
+        offset_y = self.height / 3 + 3  # move rays slightly out vertically
+        offsets = [
+            Vec2d(0, 0),  # centre
+            Vec2d(-offset_x, -offset_y),
+            Vec2d(offset_x, -offset_y),
+            Vec2d(-offset_x, offset_y),
+            Vec2d(offset_x, offset_y),
+        ]
+
+        for offset in offsets:
+            start = Vec2d(self.body.position.x, self.body.position.y) + offset
+            end = start + direction * ray_length
+            hit = space.segment_query_first(
+                start, end, radius=0.1, shape_filter=pymunk.ShapeFilter()
+            )
+            if hit and hit.shape != self.shape:
+                # Stop movement in the direction of the ray
+                movement = Vec2d(0, 0)
+                break
+
+        return movement
+
     def check_grounded(self) -> bool:
         """
         Determines if the Rigidbody2D is currently grounded.
@@ -352,7 +400,8 @@ class Rigidbody2D(Component):
             bool: True if grounded, False otherwise
         """
         space = self.game_object.scene.physics_space
-        start = Vec2d(self.body.position.x, self.body.position.y + self.height//2)
+        ground_epsilon = 0.1
+        start = Vec2d(self.body.position.x, self.body.position.y + self.height // 2 - ground_epsilon)
         end = start + Vec2d(0, 10)
         hit = space.segment_query_first(start, end, radius=0.1, shape_filter=pymunk.ShapeFilter())
         return hit and hit.shape != self.shape

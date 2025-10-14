@@ -29,6 +29,7 @@ class Rigidbody2D(Component):
             friction: float = 0.7,
             elasticity: float = 0.0,
             velocity_controlled: bool = False,
+            vertical_checks: bool = True,
     ):
         """
         Initialise a Rigidbody2D component.
@@ -45,6 +46,7 @@ class Rigidbody2D(Component):
             friction (float): Shape friction coefficient
             elasticity (float): Shape elasticity coefficient
             velocity_controlled (bool): If True, Rigidbody velocity is manually controlled
+            vertical_checks (bool): If True, check for vertical collisions when velocity controlled (good for platformers, disable for top-down movement)
         """
         super().__init__()
         self.shape_type: str = shape_type
@@ -58,6 +60,7 @@ class Rigidbody2D(Component):
         self.friction: float = friction
         self.elasticity: float = elasticity
         self.velocity_controlled: bool = velocity_controlled
+        self.vertical_checks: bool = vertical_checks
 
         self.transform: Transform | None = None
         self.body: pymunk.Body | None = None
@@ -184,11 +187,15 @@ class Rigidbody2D(Component):
         """
         if self.velocity_controlled and not self.static:
             vx_input, vy_input = self.desired_velocity
-
-            # Preserve vertical velocity from physics (gravity)
             current_vx, current_vy = self.body.velocity
+
             vx = vx_input
-            vy = current_vy
+            if getattr(self, "vertical_checks", False):
+                # Preserve physics vertical velocity
+                vy = current_vy
+            else:
+                # Apply vertical input directly
+                vy = vy_input
 
             # Apply collision checks
             vx = self.check_horizontal_collision(vx, dt)

@@ -43,6 +43,8 @@ class UITransform(Component):
 
     def start(self):
         self.game_object.is_ui_object = True
+        if self.world_space and self.relative:
+            self.relative = False
         self.update_rect()
 
     def update_rect(self):
@@ -66,8 +68,12 @@ class UITransform(Component):
             width, height = int(self._width), int(self._height)
 
         # --- Determine Base Position ---
-        if parent_transform and self.relative:
-            # Start at parent's anchor-corrected origin
+        if self.world_space and camera:
+            # Treat _x/_y as world coordinates directly
+            x, y = camera.world_to_screen(float(self._x), float(self._y))
+            width = camera.scale_length(width)
+            height = camera.scale_length(height)
+        elif parent_transform and self.relative:
             px, py = self._get_parent_anchor_origin(parent_transform)
             x = px + int(self._x * parent_transform.rect.width)
             y = py + int(self._y * parent_transform.rect.height)
@@ -76,12 +82,6 @@ class UITransform(Component):
             y = int(self._y * screen_height)
         else:
             x, y = int(self._x), int(self._y)
-
-        # --- Apply Camera if World-Space ---
-        if self.world_space and camera:
-            x, y = camera.world_to_screen(x, y)
-            width = camera.scale_length(width)
-            height = camera.scale_length(height)
 
         # --- Apply This Element's Own Anchor ---
         if self.anchor == "center":

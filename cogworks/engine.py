@@ -12,7 +12,7 @@ class Engine:
     Provides update, render, event handling, and scene management.
     """
 
-    def __init__(self, width: int = 500, height: int = 500, caption: str = "CogWorks Engine", fps: int = 60, world_bound_x: float = 5000, world_bound_y: float = 5000):
+    def __init__(self, width: int = 500, height: int = 500, caption: str = "CogWorks Engine", resizable: bool = False, fullscreen: bool = False, background_color: tuple[int, int, int]=(30,30,30), fps: int = 60, world_bound_x: float = 5000, world_bound_y: float = 5000):
         """
         Initialise the cogworks with a window, scene manager, and runtime state.
 
@@ -20,11 +20,14 @@ class Engine:
             width (int, optional): Initial width of the window. Defaults to 500.
             height (int, optional): Initial height of the window. Defaults to 500.
             caption (str, optional): The window caption. Defaults to "CogWorks Engine".
+            resizable (bool, optional) – If True, allows the window to be resizable. Defaults to False.
+            fullscreen (bool, optional) – If True, starts the window in fullscreen mode. Defaults to False.
+            background_color (tuple[int,int,int], optional) – Background color of the window. Defaults to (30, 30, 30).
             fps (int, optional): Frames per second. Defaults to 60.
             world_bound_x (float, optional): World boundary x position for GameObject, if passes it, it gets destroyed
             world_bound_y (float, optional): World boundary y position for GameObject, if passes it, it gets destroyed
         """
-        self.window = Window(pygame, width, height, caption, resizable=True)
+        self.window = Window(pygame=pygame, width=width, height=height, caption=caption, resizable=resizable, fullscreen=fullscreen, background_color=background_color)
         self.running = True
         self.clock = pygame.time.Clock()
         self.fps = fps  # Target frames per second

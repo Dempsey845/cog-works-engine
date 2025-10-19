@@ -72,6 +72,20 @@ def load_user_image(relative_path: str) -> pygame.Surface:
     _ensure_pygame_display()
     return img
 
+def load_user_font(relative_path: str, font_size: int) -> pygame.font.Font:
+    """
+    Load a pygame.Font from the user's project 'assets' folder.
+    Example: load_user_font("fonts/example.ttf")
+    """
+    project_root = os.getcwd()
+    assets_dir = os.path.join(project_root, "assets")
+    abs_path = os.path.join(assets_dir, relative_path)
+
+    if not os.path.exists(abs_path):
+        raise FileNotFoundError(f"User font not found: {abs_path}")
+
+    font = pygame.font.Font(abs_path, font_size)
+    return font
 
 def _ensure_pygame_display():
     if not pygame.get_init():

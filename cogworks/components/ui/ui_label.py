@@ -1,6 +1,7 @@
 import pygame
 from cogworks.components.ui.ui_transform import UITransform
 from cogworks.components.ui.ui_renderer import UIRenderer
+from cogworks.utils.asset_loader import load_user_font
 
 
 class UILabel(UIRenderer):
@@ -20,6 +21,7 @@ class UILabel(UIRenderer):
     def __init__(
         self,
         text: str,
+        font_path: str = None,
         font_size: int = 24,
         color: tuple[int, int, int] = (255, 255, 255),
         bg_color: tuple[int, int, int] | None = None,
@@ -31,6 +33,7 @@ class UILabel(UIRenderer):
 
         Args:
             text (str): The text displayed by the label.
+            font_path (str): The path (relative to assets folder) to the font (.ttf support only)
             font_size (int, optional): Font size (default: 24).
             color (tuple[int,int,int], optional): Text colour (default: white).
             bg_color (tuple[int,int,int] | None, optional): Background colour.
@@ -43,7 +46,10 @@ class UILabel(UIRenderer):
         super().__init__()
         self.start_text = text
         self.text = self.start_text
-        self.font = pygame.font.Font(None, font_size)
+        if font_path is None:
+            self.font = pygame.font.Font(None, font_size)
+        else:
+            self.font = load_user_font(font_path, font_size)
         self.color = color
         self.bg_color = bg_color
         self.border_radius = border_radius

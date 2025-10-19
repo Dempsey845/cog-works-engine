@@ -2,6 +2,8 @@ import pygame
 from cogworks.components.ui.ui_transform import UITransform
 from cogworks.components.ui.ui_renderer import UIRenderer
 from cogworks.pygame_wrappers.event_manager import EventManager
+from cogworks.utils.asset_loader import load_user_font
+
 
 class UIButton(UIRenderer):
     """
@@ -19,6 +21,7 @@ class UIButton(UIRenderer):
         text,
         on_click=None,
         font_size=24,
+        font_path=None,
         text_color=(255, 255, 255),
         bg_color=(0, 0, 255),
         border_radius=0
@@ -30,6 +33,7 @@ class UIButton(UIRenderer):
             text (str): The text displayed on the button.
             on_click (callable, optional): Function to call when the button is clicked.
             font_size (int, optional): Size of the text font (default: 24).
+            font_path (str, optional): Path to the .ttf font file.
             text_color (tuple[int,int,int], optional): RGB colour of the text (default: white).
             bg_color (tuple[int,int,int], optional): RGB background colour of the button (default: blue).
             border_radius (int, optional): Radius of button corners for rounded edges (default: 0, sharp corners).
@@ -37,7 +41,10 @@ class UIButton(UIRenderer):
         super().__init__()
         self.text = text
         self.on_click = on_click
-        self.font = pygame.font.Font(None, font_size)
+        if font_path is None:
+            self.font = pygame.font.Font(None, font_size)
+        else:
+            self.font = load_user_font(font_path, font_size)
         self.text_color = text_color
         self.bg_color = bg_color
         self.border_radius = border_radius

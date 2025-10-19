@@ -14,6 +14,7 @@ class UILabel(UIRenderer):
         - Supports optional rounded corners for the background.
         - Anchor options: 'center', 'topleft', 'topright', 'bottomleft', 'bottomright',
                           'midtop', 'midbottom', 'midleft', 'midright'.
+        - Supports alpha transparency and fade-in/fade-out animations.
     """
 
     def __init__(
@@ -48,6 +49,12 @@ class UILabel(UIRenderer):
         self.border_radius = border_radius
         self.anchor = anchor.lower().strip()
 
+        # Alpha (transparency) support
+        self.alpha = 255  # Fully visible by default
+        self.fade_speed = 0  # How much alpha changes per frame
+        self.fading_in = False
+        self.fading_out = False
+
     def start(self):
         self.text = self.start_text
 
@@ -55,13 +62,45 @@ class UILabel(UIRenderer):
         """Update the label's text."""
         self.text = new_text
 
+    def fade_in(self, speed: int = 5) -> None:
+        """Start fading the label in (increasing alpha)."""
+        self.fade_speed = abs(speed)
+        self.fading_in = True
+        self.fading_out = False
+
+    def fade_out(self, speed: int = 5) -> None:
+        """Start fading the label out (decreasing alpha)."""
+        self.fade_speed = abs(speed)
+        self.fading_out = True
+        self.fading_in = False
+
+    def update(self, dt: float) -> None:
+        """
+        Update label fade animations.
+        Should be called every frame (dt = delta time).
+        """
+        if self.fading_in:
+            self.alpha = min(255, self.alpha + self.fade_speed)
+            if self.alpha >= 255:
+                self.fading_in = False
+        elif self.fading_out:
+            self.alpha = max(0, self.alpha - self.fade_speed)
+            if self.alpha <= 0:
+                self.fading_out = False
+
     def render(self, surface) -> None:
         rect = self.game_object.get_component(UITransform).rect
         text_surf = self.font.render(self.text, True, self.color)
 
+        # Apply alpha transparency
+        text_surf.set_alpha(self.alpha)
+
         # Draw background if needed
         if self.bg_color:
-            pygame.draw.rect(surface, self.bg_color, rect, border_radius=self.border_radius)
+            bg_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+            bg_color_with_alpha = (*self.bg_color, self.alpha)
+            pygame.draw.rect(bg_surf, bg_color_with_alpha, bg_surf.get_rect(), border_radius=self.border_radius)
+            surface.blit(bg_surf, rect)
 
         # Get the text rect and position based on the chosen anchor
         text_rect = text_surf.get_rect()

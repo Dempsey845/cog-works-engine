@@ -96,9 +96,17 @@ class Particle(Component):
         Attaches a sprite if provided.
         """
         # Randomise initial position
-        random_x = random.uniform(self.min_x, self.max_x)
-        random_y = random.uniform(self.min_y, self.max_y)
-        self.game_object.transform.set_local_position(random_x, random_y)
+        offset_x = random.uniform(self.min_x, self.max_x)
+        offset_y = random.uniform(self.min_y, self.max_y)
+
+        parent = self.game_object.parent
+        if parent is not None:
+            # Local space — offset relative to emitter origin (0, 0)
+            self.game_object.transform.set_local_position(offset_x, offset_y)
+        else:
+            # World space — offset from world position directly
+            start_x, start_y = self.game_object.transform.get_local_position()
+            self.game_object.transform.set_local_position(start_x + offset_x, start_y + offset_y)
 
         # Randomise initial rotation
         random_rotation = random.uniform(self.min_rotation, self.max_rotation)

@@ -154,13 +154,20 @@ class ParticleEffect(Component):
                 self._time_since_last_emit -= emit_interval
                 self.spawn_particle()
 
-
     def spawn_particle(self) -> None:
         """Spawn a single particle instance."""
         if len(self.game_object.children) >= self.max_particles and self.simulation_space == "local":
             return  # Cap particles only in local mode
 
-        particle = GameObject("Particle", z_index=5)
+        from cogworks import GameObject
+        from cogworks.components.particle import Particle
+        import random
+
+        # Get emitter position in world space
+        world_x, world_y = self.game_object.transform.get_world_position()
+
+        # Create the particle directly at the correct world position
+        particle = GameObject("Particle", x=world_x, y=world_y, z_index=5)
         particle_component = Particle(
             sprite_path=self.sprite_path,
             min_x=self.min_x,
@@ -183,14 +190,12 @@ class ParticleEffect(Component):
         )
         particle.add_component(particle_component)
 
-
         if self.simulation_space == "local":
             # Follows parent transform (e.g., a torch flame)
             self.game_object.add_child(particle)
         elif self.simulation_space == "world":
             # Spawns directly into the scene (e.g., explosion)
             self.game_object.scene.instantiate_game_object(particle)
-            # Set world position to match emitter’s current position
-            particle.transform.position = self.game_object.transform.world_position
         else:
             raise ValueError("simulation_space must be 'local' or 'world'")
+
